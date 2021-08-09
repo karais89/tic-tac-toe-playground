@@ -1200,6 +1200,201 @@ public class GameController : MonoBehaviour {
 이 단계에서는 실제로 Tic-Tac-Toe를 재생할 수 있습니다. 
 그러나 다음 단계는 사람들이 완료되고 플레이할 가치가 있다고 느끼는 적절한 게임으로 프로젝트를 다듬는 것입니다.
 
+## 7.Game Over text
+
+이제부터 우리는 본질적으로 게임을 다듬고 표현 가능하게 만들고 있습니다.
+
+제작 관점에서 볼 때 단순히 기본 게임 및 게임 플레이를 제작하는 것과 비교하여 게임을 연마하는 데 얼마나 많은 시간이 소요되는지 주목할 가치가 있습니다.
+
+이것은 새로운 게임 개발자에게 일반적인 간과입니다.
+
+기본 게임 플레이가 빠르게 결합됩니다... 터널 끝에 빛이 있고... 그리고... 예기치 않게... 세련되고 멋진 게임을 만들기 위한 긴 오르막이 있습니다. 
+흥미롭게도 흥미롭고 어려운 문제는 모두 해결되었습니다. 남은 것은 끝없는 조정과 연마의 바다뿐입니다...
+
+이 시점에서 낙심하기 쉽습니다. 하지만. 우리는 어떤 제품을 연마하고 발표하는 것이 기본 기능을 하는 제품 자체를 생산하는 것보다 더 오래 걸리거나 더 오래 걸린다는 것을 항상 기억해야 합니다.
+
+"Game Over" 텍스트 요소를 생성하여 다듬기를 시작하겠습니다.
+- 만들기 > UI > 패널을 사용하여 장면에 새 UI 패널 요소를 만듭니다.
+- 패널을 선택한 상태에서
+  - GameObject의 이름을 "Game Over Panel"로 바꿉니다.
+  - .. Anchor, Pivot 및 Position을 중간/중앙으로 설정합니다.
+  - ... 너비를 440으로 설정합니다.
+  - ... 높이를 100으로 설정합니다.
+  - ... 색상을 보드와 유사한 진한 파란색으로 설정합니다(33, 44, 55, 196).
+
+색상을 설정하려면 색상 선택기 패널에서 사전 설정 색상 견본을 사용한 다음 알파 채널 값을 196으로 변경할 수 있습니다.
+
+다음으로 패널에 UI 텍스트 요소를 추가하려고 합니다. 
+Hierarchy Window의 Create 메뉴를 사용하여 생성할 수 있지만, 이는 단순히 UI Text 요소를 루트 Canvas에 추가하는 것입니다.
+
+그림 설명
+
+이것은 작동하지만 새 UI 텍스트 요소를 Game Over Panel로 드래그하여 자식으로 만들어야 합니다.
+
+단계를 줄이기 위해 UI Text 요소를 직접 자식으로 만들 수 있습니다.
+- 계층 구조 창에서 게임 오버 패널을 마우스 오른쪽 버튼으로 클릭합니다.
+
+그러면 상황에 맞는 메뉴가 열립니다. 이 메뉴에서 UI > 텍스트를 선택합니다.
+
+그림 설명
+
+UI 요소를 선택하고 상황에 맞는 메뉴를 사용할 때 Unity에 새 UI 요소를 자식으로 만들고 싶다고 표시합니다.
+
+그림 설명
+
+이제 한 단계로 UI Text 요소를 Game Over Panel의 자식으로 만들었습니다.
+- Text GameObject를 선택합니다.
+- Text GameObject를 선택한 상태에서
+  - ... Anchor, Pivot 및 Position을 늘이기 위해 설정합니다.
+  - ... 텍스트를 "Win Text"로 설정합니다.
+  - ... 글꼴 크기를 64로 설정합니다.
+  - ... 정렬을 중간/중앙으로 설정합니다.
+  - ... 사전 설정을 사용하여 색상을 파란색(0, 204, 204, 255)으로 설정합니다.
+
+그림 설명
+
+- 장면 저장
+
+이제 이 UI 패널과 UI 텍스트 요소를 제어해야 합니다.
+
+- 편집을 위해 GameController 스크립트를 엽니다.
+
+Game Over Panel과 관련된 Text 요소를 보유하고 있는 GameObject에 대한 참조가 필요합니다. 
+게임 시작 시 Game Over Panel이 비활성화되어 있는지 확인해야 합니다. 
+마지막으로 Game Over Panel을 활성화하고 게임이 끝나면 Text 값을 설정하려고 합니다.
+- Game Over 패널에 대한 공개 GameObject 변수를 만듭니다.
+- 연결된 Text 구성 요소에 대한 공용 변수를 만듭니다.
+```cs
+public GameObject gameOverPanel; public Text gameOverText;
+```
+- Awake에서 gameOverPanel을 Inactive로 설정합니다.
+```cs
+gameOverPanel.SetActive(false);
+```
+- GameOver에서
+  - ... gameOverPanel"을 활성으로 설정합니다.
+  - ... 승자를 표시하도록 gameOverText.text" 속성을 설정합니다.
+```cs
+gameOverPanel.SetActive(true); 
+gameOverText.text = playerSide + " Wins!"; // Note the space after the first " and Wins!"
+```
+
+최종 스크립트는 다음과 같아야 합니다.
+
+```cs
+using UnityEngine;
+using UnityEngine.UI;
+using System.Collections;
+
+public class GameController : MonoBehaviour {
+
+    public Text[] buttonList;
+    public GameObject gameOverPanel;
+    public Text gameOverText;
+
+    private string playerSide;
+
+    void Awake ()
+    {
+        SetGameControllerReferenceOnButtons();
+        playerSide = "X";
+        gameOverPanel.SetActive(false);
+    }
+
+    void SetGameControllerReferenceOnButtons ()
+    {
+        for (int i = 0; i < buttonList.Length; i++)
+        {
+            buttonList[i].GetComponentInParent<GridSpace>().SetGameControllerReference(this);
+        }
+    }
+
+    public string GetPlayerSide ()
+    {
+        return playerSide;
+    }
+
+    public void EndTurn ()
+    {
+
+        if (buttonList [0].text == playerSide && buttonList [1].text == playerSide && buttonList [2].text == playerSide)
+        {
+            GameOver();
+        }
+
+        if (buttonList [3].text == playerSide && buttonList [4].text == playerSide && buttonList [5].text == playerSide)
+        {
+            GameOver();
+        }
+
+        if (buttonList [6].text == playerSide && buttonList [7].text == playerSide && buttonList [8].text == playerSide)
+        {
+            GameOver();
+        }
+
+        if (buttonList [0].text == playerSide && buttonList [3].text == playerSide && buttonList [6].text == playerSide)
+        {
+            GameOver();
+        }
+
+        if (buttonList [1].text == playerSide && buttonList [4].text == playerSide && buttonList [7].text == playerSide)
+        {
+            GameOver();
+        }
+
+        if (buttonList [2].text == playerSide && buttonList [5].text == playerSide && buttonList [8].text == playerSide)
+        {
+            GameOver();
+        }
+
+        if (buttonList [0].text == playerSide && buttonList [4].text == playerSide && buttonList [8].text == playerSide)
+        {
+            GameOver();
+        }
+        if (buttonList [2].text == playerSide && buttonList [4].text == playerSide && buttonList [6].text == playerSide)
+        {
+            GameOver();
+        }
+        ChangeSides();
+    }
+
+    void ChangeSides ()
+    {
+        playerSide = (playerSide == "X") ? "O" : "X";
+    }
+
+    void GameOver ()
+    {
+        for (int i = 0; i < buttonList.Length; i++)
+        {
+            buttonList[i].GetComponentInParent<Button>().interactable = false;
+        }
+        gameOverPanel.SetActive(true);
+        gameOverText.text = playerSide + " Wins!";
+    }
+}
+```
+- 스크립트 저장
+- 유니티 돌아가기
+
+이제 GameController 스크립트에서 만든 변수에 새 패널과 텍스트를 할당해야 합니다.
+- 계층 창에서 게임 컨트롤러를 선택합니다.
+- 게임 컨트롤러를 선택한 상태에서
+  - .. Game Over Panel 속성을 할당합니다.
+  - ... Game Over Text 속성을 할당합니다.
+
+그림 설명
+
+- 장면 저장
+- 플레이
+- 테스트
+
+이제 어느 팀에서든 3연패를 당하면 게임이 끝났고 누가 이겼는지에 대한 명확한 안내를 받아야 합니다.
+
+그림 설명
+
+다음 수업에서는 아무도 이기지 않고 게임이 무승부인 경우를 다룰 것입니다.
+
 ## Getting Started
 
 Download links:
