@@ -1597,6 +1597,647 @@ public class GameController : MonoBehaviour {
 게임이 완료되면 애플리케이션을 다시 시작하지 않고 원하는 만큼 계속 플레이할 수 있기를 원할 것입니다. 
 다음 강의에서는 게임을 재설정하고 다시 시작하는 방법을 다룰 것입니다.
 
+## 9.Restarting the game
+
+이기거나 무승부가 되면 게임이 종료됩니다. 
+모든 버튼이 비활성화됩니다. 
+게임으로 더 이상 할 수 있는 것은 없습니다. 
+유일한 옵션은 게임을 종료하고 다시 플레이하려면 게임을 다시 시작하는 것입니다. 
+이것은 매우 효율적이지 않습니다.
+
+게임이 종료되었을 때만 나타나는 버튼을 클릭하여 게임을 다시 시작하는 방법을 만들어 보겠습니다.
+
+이 버튼은 상당히 견고해야 합니다. 
+게임이 끝났을 때만 나타나야 합니다. 
+클릭하면 버튼을 다시 숨겨야 합니다. 
+더 중요한 것은 버튼이 게임 오버 패널을 숨기고, 보드의 모든 그리드 공간을 지우고 다시 활성화하고, 이동 카운터를 재설정하고, 게임을 다시 시작해야 한다는 것입니다.
+
+이를 위해서는 두 가지가 필요합니다.
+
+장면의 UI 버튼 요소와 클릭 시 UI 버튼이 호출할 수 있는 공개 함수가 필요합니다.
+모든 실용적인 목적을 위해 이 경우 버튼을 먼저 만들든 함수를 만들든 차이가 없습니다. 
+그러나 함수를 먼저 만들면 생성할 때 함수를 버튼에 연결할 수 있습니다.
+
+그럼 함수를 작성하는 것부터 시작하겠습니다.
+- 편집을 위해 GameController 스크립트를 엽니다.
+- void를 반환하고 "RestartGame"이라는 새 공용 함수를 만듭니다.
+```cs
+public void RestartGame() 
+{
+
+}
+```
+- In RestartGame,
+  - ... playerSide를 "X"로 설정합니다.
+  - ... moveCount를 0으로 설정합니다.
+  - ... 게임 오버 패널을 비활성화로 설정합니다.
+```cs
+playerSide = "X"; 
+moveCount = 0; 
+gameOverPanel.SetActive(false);
+```
+
+이 코드는 플레이어 측과 이동 횟수를 재설정하고 게임 오버 패널을 비활성화합니다.
+이제 모든 그리드 공간을 반복하고 "X"와 "O"를 제거하고 버튼을 다시 활성화해야 합니다.
+우리를 돕기 위해 우리는 이미 이것을 수행하는 무언가를 가지고 있습니다. 
+그리드의 모든 버튼을 비활성화한 GameOver의 for 루프입니다.
+
+- GameOver에서 모든 그리드 공간을 반복하는 for 루프를 복사합니다.
+- 이 코드를 RestartGame에 붙여넣습니다
+- 이 새로운 for 루프 내부에서,
+  - ... 상호 작용 가능한 부울 값을 false에서 true로 변경합니다.
+
+그러면 모든 버튼이 다시 활성화됩니다.
+
+- 새로운 for 루프 내부에서,
+  - ... buttonList.text 속성을 빈 문자열 값으로 설정합니다.
+  
+이렇게 하면 그리드 공간에서 "X"와 "O"가 모두 제거됩니다.  
+
+```cs
+for (int i = 0; i < buttonList.Length; i++) 
+{ 
+     buttonList[i].GetComponentInParent<Button>().interactable = true; 
+     buttonList [i].text = ""; 
+}
+```
+
+다시 일어나고 있습니까? 동일하지는 않더라도 유사한 코드가 코드베이스 전체에 확산되기 시작했습니까? 나쁜 코더. 아니 도넛!
+
+같은 일을 하는 모든 코드를 한곳에 모아야 합니다.
+
+- bool 매개변수 "toggle"이 있는 "SetBoardInteractable"이라는 void를 반환하는 새 함수를 만듭니다.
+
+```cs
+void SetBoardInteractable (bool toggle); 
+{
+
+}
+```
+- 보드를 상호작용 불가능으로 설정하는 코드를 GameOver에서 SetBoardInteractable로 복사합니다.
+- 토글하려면 false 값을 변경하십시오.
+```cs
+for (int i = 0; i < buttonList.Length; i++) 
+{ 
+     buttonList[i].GetComponentInParent<Button>().interactable = toggle; 
+}
+```
+- 게임오버에서는
+  - ... 복사한 코드를 SetBoardInteractable(false)에 대한 호출로 교체합니다.
+- 리스타트게임에서
+  - ... for 루프에서 보드를 상호 작용 가능하도록 설정하는 코드 줄을 제거하지만 텍스트를 재설정하는 줄은 그대로 둡니다.
+  - ... for 루프 외부의 새 줄에서 SetBoardInteractable(true)에 대한 호출을 추가합니다.
+```cs
+SetBoardInteractable(true); 
+for (int i = 0; i < buttonList.Length; i++) 
+{
+     buttonList [i].text = ""; 
+ }
+```
+
+이것은 이제 훨씬 더 깔끔하고 명확해졌습니다. 최종 스크립트는 다음과 같아야 합니다.
+
+```cs
+using UnityEngine;
+using UnityEngine.UI;
+using System.Collections;
+
+public class GameController : MonoBehaviour {
+
+    public Text[] buttonList;
+    public GameObject gameOverPanel;
+    public Text gameOverText;
+
+    private string playerSide;
+    private int moveCount;
+
+    void Awake ()
+    {
+        SetGameControllerReferenceOnButtons();
+        playerSide = "X";
+        gameOverPanel.SetActive(false);
+        moveCount = 0;
+    }
+
+    void SetGameControllerReferenceOnButtons ()
+    {
+        for (int i = 0; i < buttonList.Length; i++)
+        {
+            buttonList[i].GetComponentInParent<GridSpace>().SetGameControllerReference(this);
+        }
+    }
+
+    public string GetPlayerSide ()
+    {
+        return playerSide;
+    }
+
+    public void EndTurn ()
+    {
+        moveCount++;
+        if (buttonList [0].text == playerSide && buttonList [1].text == playerSide && buttonList [2].text == playerSide)
+        {
+            GameOver();
+        }
+
+        if (buttonList [3].text == playerSide && buttonList [4].text == playerSide && buttonList [5].text == playerSide)
+        {
+            GameOver();
+        }
+
+        if (buttonList [6].text == playerSide && buttonList [7].text == playerSide && buttonList [8].text == playerSide)
+        {
+            GameOver();
+        }
+
+        if (buttonList [0].text == playerSide && buttonList [3].text == playerSide && buttonList [6].text == playerSide)
+        {
+            GameOver();
+        }
+
+        if (buttonList [1].text == playerSide && buttonList [4].text == playerSide && buttonList [7].text == playerSide)
+        {
+            GameOver();
+        }
+
+        if (buttonList [2].text == playerSide && buttonList [5].text == playerSide && buttonList [8].text == playerSide)
+        {
+            GameOver();
+        }
+
+        if (buttonList [0].text == playerSide && buttonList [4].text == playerSide && buttonList [8].text == playerSide)
+        {
+            GameOver();
+        }
+
+        if (buttonList [2].text == playerSide && buttonList [4].text == playerSide && buttonList [6].text == playerSide)
+        {
+            GameOver();
+        }
+
+        if (moveCount >= 9)
+        {
+            SetGameOverText ("It's a draw!");
+        }
+
+        ChangeSides();
+
+    }
+
+    void ChangeSides ()
+    {
+        playerSide = (playerSide == "X") ? "O" : "X";
+    }
+
+    void GameOver ()
+    {
+        SetBoardInteractable(false);
+        SetGameOverText (playerSide + " Wins!");
+    }
+
+    void SetGameOverText (string value)
+    {
+        gameOverPanel.SetActive(true);
+        gameOverText.text = value;
+    }
+
+    public void RestartGame ()
+    {
+        playerSide = "X";
+        moveCount = 0;
+        gameOverPanel.SetActive(false);
+        SetBoardInteractable(true);
+
+        for (int i = 0; i < buttonList.Length; i++)
+        {
+            buttonList [i].text = "";
+        }
+    }
+
+    void SetBoardInteractable (bool toggle)
+    {
+        for (int i = 0; i < buttonList.Length; i++)
+        {
+            buttonList[i].GetComponentInParent<Button>().interactable = toggle;
+        }
+    }
+}
+```
+- 스크립트 저장
+- 유니티로 돌아가기
+
+테스트하기 전에 UI Button 요소를 설정해야 합니다.
+- 만들기 > UI > 버튼을 사용하여 장면에 UI 버튼 요소를 만듭니다.
+- 버튼 게임 오브젝트가 선택된 상태에서
+  - .. 게임 오브젝트의 이름을 "다시 시작 버튼"으로 바꿉니다
+  - 상황에 맞는 기어 메뉴를 사용하여 RectTransform을 재설정합니다.
+  - 위치 Y를 330으로 설정합니다
+  - 너비를 200으로 설정합니다.
+  - 색상 사전 설정을 사용하여 일반 색상을 파란색(0, 204, 204, 255)으로 설정합니다.
+  - ... 색상 사전 설정을 사용하여 강조 색상을 밝은 파란색(128, 255, 255, 255)으로 설정합니다.
+  - ... 색상 사전 설정을 사용하여 Pressed Color를 진한 청록색(51, 102, 102, 255)으로 설정합니다.
+  - 사전 설정 색상을 사용하여 비활성화된 색상을 매우 진한 파란색(33, 44, 55, 255)으로 설정합니다.
+  - 버튼의 OnClick 목록에 새 행을 추가합니다.
+  - ... 계층 창에서 게임 컨트롤러 게임 개체를 버튼의 OnClick 목록에 있는 새 행의 개체 필드로 드래그합니다.
+  - ... 버튼의 OnClick 목록에서 새 행의 기능을 GameController > RestartGame으로 설정합니다.
+
+그림 설명
+
+이제 연결된 텍스트를 변경하여 버튼의 모양을 설정해야 합니다.
+- 자식 텍스트 게임 오브젝트를 선택합니다.
+- Text GameObject를 선택한 상태에서
+  - ... Text 구성 요소의 Text 속성을 "다시 재생하시겠습니까?"로 설정합니다.
+  - ... 글꼴 크기를 18로 설정합니다.
+
+이렇게 하면 다시 시작 버튼 설정이 완료됩니다.
+
+- 장면 저장
+- 플레이
+- 테스트
+- Restart 버튼 클릭
+- 플레이 모드 빠져 나가기
+  
+이제 게임을 다시 시작할 수 있습니다.
+
+그러나 슬프게도 게임 내내 버튼이 노출되어 있기 때문에 언제든지 게임을 다시 시작할 수 있습니다.
+
+이것이 반드시 원하는 동작은 아닙니다.
+
+졌다면 갑자기 "하!" 하고 게임을 다시 시작해서 상대방을 짜증나게 하는 것은 예의가 아닙니다.
+
+이 버튼은 게임이 종료되었을 때만 사용할 수 있습니다. 
+게임을 플레이할 수 있는 동안 버튼이 숨겨져 있고 게임이 끝날 때만 표시되는 경우 게임이 우발적이거나 고의적으로 다시 시작되는 것을 방지하기 위해 게임이 실행 중인지 확인하기 위해 다시 시작 코드에 특별한 로직을 생성할 필요가 없습니다. . 
+이것은 버튼을 숨기고 드러내기만 하면 됩니다.
+
+버튼은 게임이 시작될 때 기본적으로 숨겨져 있어야 합니다. 그런 다음 게임이 끝나면 활성화되고 게임이 다시 시작되면 다시 비활성화되어야 합니다.
+- 편집을 위해 GameController 스크립트를 엽니다.
+- 다시 시작 버튼에 대한 참조를 유지하기 위해 새 공용 변수를 선언합니다.
+```cs
+public GameObject restartButton;
+```
+- Awake에서
+  - Restart Button 끄기
+```cs
+restartButton.SetActive(false);
+```
+- GameOver에서
+  - Restart Button 켜기
+```cs
+restartButton.SetActive(true);
+```
+- RestartGame에서
+  - Restart Button 끄기
+```cs
+restartButton.SetActive(false);
+```
+최종 스크립트는 다음과 같아야 합니다.
+
+```cs
+using UnityEngine;
+using UnityEngine.UI;
+using System.Collections;
+
+public class GameController : MonoBehaviour {
+
+    public Text[] buttonList;
+    public GameObject gameOverPanel;
+    public Text gameOverText;
+    public GameObject restartButton;
+
+    private string playerSide;
+    private int moveCount;
+
+    void Awake ()
+    {
+        SetGameControllerReferenceOnButtons();
+        playerSide = "X";
+        gameOverPanel.SetActive(false);
+        moveCount = 0;
+        restartButton.SetActive(false);
+    }
+
+    void SetGameControllerReferenceOnButtons ()
+    {
+        for (int i = 0; i < buttonList.Length; i++)
+        {
+            buttonList[i].GetComponentInParent<GridSpace>().SetGameControllerReference(this);
+        }
+    }
+
+    public string GetPlayerSide ()
+    {
+        return playerSide;
+    }
+
+    public void EndTurn ()
+    {
+        moveCount++;
+        if (buttonList [0].text == playerSide && buttonList [1].text == playerSide && buttonList [2].text == playerSide)
+        {
+            GameOver();
+        }
+
+        if (buttonList [3].text == playerSide && buttonList [4].text == playerSide && buttonList [5].text == playerSide)
+        {
+            GameOver();
+        }
+
+        if (buttonList [6].text == playerSide && buttonList [7].text == playerSide && buttonList [8].text == playerSide)
+        {
+            GameOver();
+        }
+
+        if (buttonList [0].text == playerSide && buttonList [3].text == playerSide && buttonList [6].text == playerSide)
+        {
+            GameOver();
+        }
+
+        if (buttonList [1].text == playerSide && buttonList [4].text == playerSide && buttonList [7].text == playerSide)
+        {
+            GameOver();
+        }
+
+        if (buttonList [2].text == playerSide && buttonList [5].text == playerSide && buttonList [8].text == playerSide)
+        {
+            GameOver();
+        }
+
+        if (buttonList [0].text == playerSide && buttonList [4].text == playerSide && buttonList [8].text == playerSide)
+        {
+            GameOver();
+        }
+
+        if (buttonList [2].text == playerSide && buttonList [4].text == playerSide && buttonList [6].text == playerSide)
+        {
+            GameOver();
+        }
+
+        if (moveCount >= 9)
+        {
+            SetGameOverText ("It's a draw!");
+        }
+
+        ChangeSides();
+
+    }
+
+    void ChangeSides ()
+    {
+        playerSide = (playerSide == "X") ? "O" : "X";
+    }
+
+    void GameOver ()
+    {
+        SetBoardInteractable(false);
+        SetGameOverText (playerSide + " Wins!");
+        restartButton.SetActive(true);
+    }
+
+    void SetGameOverText (string value)
+    {
+        gameOverPanel.SetActive(true);
+        gameOverText.text = value;
+    }
+
+    public void RestartGame ()
+    {
+        playerSide = "X";
+        moveCount = 0;
+        gameOverPanel.SetActive(false);
+        restartButton.SetActive(false);
+        SetBoardInteractable(true);
+
+        for (int i = 0; i < buttonList.Length; i++)
+        {
+            buttonList [i].text = "";
+        }
+    }
+
+    void SetBoardInteractable (bool toggle)
+    {
+        for (int i = 0; i < buttonList.Length; i++)
+        {
+            buttonList[i].GetComponentInParent<Button>().interactable = toggle;
+        }
+    }
+}
+```
+- 스크립트 저장
+- 유니티 돌아가기
+
+Restart Button GameObject를 GameController의 Restart Button 속성과 연결합니다.
+
+- 계층 창에서 게임 컨트롤러를 선택합니다.
+- 게임 컨트롤러를 선택한 상태에서
+  - ... 다시 시작 버튼 속성을 할당합니다.
+
+그림 설명
+
+- 장면 저장
+- 플레이
+- 테스트
+
+이제 장면을 재생할 때 다시 시작 버튼이 표시되지 않습니다. 
+게임이 승리로 끝나면 다시 시작 버튼이 표시됩니다. 
+다시 시작 버튼을 사용하여 게임을 다시 시작하면 버튼이 숨겨집니다.
+
+그러나 무승부 또는 무승부로 끝나면 실제로 무승부로 게임을 끝내지 않기 때문에 구성이 실패합니다.
+
+이에 대한 해결책은 무승부와 승리가 있는 경우 게임을 종료하는 것입니다. 
+이것도 의미가 있습니다. 무승부가 있으면 게임이 종료됩니다. 
+이를 위해서는 모든 Game Over 로직을 한 곳에서 포함하여 GameOver 기능을 작동하는 방식을 업데이트해야 합니다.
+- 편집을 위해 GameController 스크립트를 엽니다.
+- "winPlayer"라는 문자열 매개변수를 포함하도록 GameOver 함수의 서명을 변경합니다.
+```cs
+void GameOver(string winningPlayer);
+```
+if/else 확인을 추가하여 winPlayer가 "무승부"인지 확인하고 Game Over Text를 "무승부입니다!"로 설정합니다. 
+또는 Game Over Text를 승리한 플레이어로 설정합니다.
+```cs
+if (winningPlayer == "draw") 
+{ 
+     SetGameOverText("It's a Draw!"); 
+} else 
+{
+     SetGameOverText(winningPlayer + " Wins!"); 
+}
+```
+SetGameOverText와 관련된 이 코드만 추가하거나 교체하십시오. 
+나머지 코드는 블록에 그대로 두십시오. 
+SetGameOverText(playerSide + " Wins!"); 코드 블록의 else 부분 안에 배치하여 if/else 논리의 일부인 한 유지될 수 있습니다.
+- EndTurn에서 코드를 조정합니다. 승자가 있는 8가지 경우 각각
+  - ... playerSide를 인수로 포함하도록 GameOver에 대한 호출을 변경합니다.
+```cs
+GameOver(playerSide);
+```
+- EndTurn에서 코드를 조정합니다. If(moveCount >= 9) 뒤에,
+  - ... 코드 제거 SetGameOverText("무승부입니다!");
+  - ... "draw"의 문자열 값을 인수로 포함하여 GameOver를 호출하는 호출로 이것을 대체합니다.
+```cs
+if (moveCount >= 9) 
+{
+     GameOver("draw");
+}
+```
+최종 스크립트는 다음과 같아야 합니다.
+
+```cs
+using UnityEngine;
+using UnityEngine.UI;
+using System.Collections;
+
+public class GameController : MonoBehaviour {
+
+   public Text[] buttonList;
+   public GameObject gameOverPanel;
+   public Text gameOverText;
+   public GameObject restartButton;
+
+   private string playerSide;
+   private int moveCount;
+
+   void Awake ()
+   {
+       SetGameControllerReferenceOnButtons();
+       playerSide = "X";
+       gameOverPanel.SetActive(false);
+       moveCount = 0;
+       restartButton.SetActive(false);
+   }
+
+   void SetGameControllerReferenceOnButtons ()
+   {
+       for (int i = 0; i < buttonList.Length; i++)
+       {
+           buttonList[i].GetComponentInParent<GridSpace>().SetGameControllerReference(this);
+       }
+   }
+
+   public string GetPlayerSide ()
+   {
+       return playerSide;
+   }
+
+   public void EndTurn ()
+   {
+       moveCount++;
+
+       if (buttonList [0].text == playerSide && buttonList [1].text == playerSide && buttonList [2].text == playerSide)
+       {
+           GameOver(playerSide);
+       }
+
+       if (buttonList [3].text == playerSide && buttonList [4].text == playerSide && buttonList [5].text == playerSide)
+       {
+           GameOver(playerSide);
+       }
+
+       if (buttonList [6].text == playerSide && buttonList [7].text == playerSide && buttonList [8].text == playerSide)
+       {
+           GameOver(playerSide);
+       }
+
+       if (buttonList [0].text == playerSide && buttonList [3].text == playerSide && buttonList [6].text == playerSide)
+       {
+           GameOver(playerSide);
+       }
+
+       if (buttonList [1].text == playerSide && buttonList [4].text == playerSide && buttonList [7].text == playerSide)
+       {
+           GameOver(playerSide);
+       }
+
+       if (buttonList [2].text == playerSide && buttonList [5].text == playerSide && buttonList [8].text == playerSide)
+       {
+           GameOver(playerSide);
+       }
+
+       if (buttonList [0].text == playerSide && buttonList [4].text == playerSide && buttonList [8].text == playerSide)
+       {
+           GameOver(playerSide);
+       }
+
+       if (buttonList [2].text == playerSide && buttonList [4].text == playerSide && buttonList [6].text == playerSide)
+       {
+           GameOver(playerSide);
+       }
+
+       if (moveCount >= 9)
+       {
+           GameOver("draw");
+       }
+
+       ChangeSides();
+
+   }
+
+   void ChangeSides ()
+   {
+       playerSide = (playerSide == "X") ? "O" : "X";
+   }
+
+   void GameOver (string winningPlayer)
+   {
+       SetBoardInteractable(false);
+       if (winningPlayer == "draw")
+       {
+           SetGameOverText("It's a Draw!");
+       } else
+       {
+           SetGameOverText(winningPlayer + " Wins!");
+       }
+       restartButton.SetActive(true);
+   }
+
+   void SetGameOverText (string value)
+   {
+       gameOverPanel.SetActive(true);
+       gameOverText.text = value;
+   }
+
+   public void RestartGame ()
+   {
+       playerSide = "X";
+       moveCount = 0;
+       gameOverPanel.SetActive(false);
+       restartButton.SetActive(false);
+       SetBoardInteractable(true);
+
+       for (int i = 0; i < buttonList.Length; i++)
+       {
+           buttonList [i].text = "";
+       }
+   }
+
+   void SetBoardInteractable (bool toggle)
+   {
+       for (int i = 0; i < buttonList.Length; i++)
+       {
+           buttonList[i].GetComponentInParent<Button>().interactable = toggle;
+       }
+   }
+}
+```
+
+이 코드는 훨씬 더 깔끔하고 논리적으로 보이기 시작했습니다. 
+EndTurn에서는 게임이 끝나면 무승부인지 승리인지에 관계없이 GameOver 함수가 호출됩니다. 
+GameOver 함수는 모든 게임 오버 로직을 처리합니다. 
+우리가 작성하는 각 기능은 캔에 표시된 대로 수행됩니다. 
+함수의 이름은 함수가 하는 일을 나타냅니다. 
+모든 관련 기능은 해당 기능 내에 포함됩니다. 
+이렇게 하면 코드를 읽을 때 논리의 흐름을 더 쉽게 따라갈 수 있으며 코드가 명확하고 정렬되고 간결하여 수정 및 유지 관리가 더 쉬워집니다.
+
+- 스크립트 저장
+- 유니티로 돌아가기
+- 플레이
+- 테스트
+  
+다시 시작 버튼은 이제 우리가 이기거나 비기면 작동합니다.
+
+그림 설명
+
+다음 레슨에서는 누구의 차례인지 표시하기 위해 두 개의 작은 패널을 만들 것입니다.
+
 ## Getting Started
 
 Download links:
