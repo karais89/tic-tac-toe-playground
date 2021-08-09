@@ -86,13 +86,6 @@ public class GameController : MonoBehaviour
         ChangeSides();
     }
 
-    private void GameOver()
-    {
-        SetBoardInteractable(false);
-        SetGameOverText(playerSide + " Wins!");
-        restartButton.SetActive(true);
-    }
-
     private void ChangeSides()
     {
         playerSide = (playerSide == "X") ? "O" : "X"; // Note: Capital Letters for "X" and "O"
@@ -128,6 +121,8 @@ public class GameController : MonoBehaviour
 
     private void GameOver(string winningPlayer)
     {
+        SetBoardInteractable(false);
+        
         if (winningPlayer == "draw")
         {
             SetGameOverText("It's a Draw!");
@@ -136,5 +131,7 @@ public class GameController : MonoBehaviour
         {
             SetGameOverText(winningPlayer + " Wins!");
         }
+
+        restartButton.SetActive(true);
     }
 }
