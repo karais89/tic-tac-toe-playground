@@ -488,6 +488,319 @@ Grid Space GameObject가 GridSpace 스크립트의 인스턴스를 운반하고 
 
 이것은 거의 게임이 아니지만 우리 게임과 게임 플레이의 기초를 제시합니다.
 
+## 5.Controlling the game
+
+이제 이 기본 동작을 게임으로 전환해야 합니다.
+
+이렇게 하려면 게임 컨트롤러를 만들어 컨트롤을 중앙 위치로 이동해야 합니다. 
+게임 컨트롤러는 시작 플레이어의 편을 "X" 또는 "O"로 설정하고 누구의 차례인지 추적하고 버튼을 클릭하면 현재 플레이어의 편을 보내고 승자를 확인하고 편을 바꾸거나 종료합니다.
+
+이 작업을 수행하려면 새 스크립트가 필요하므로 자체 GameObject에 연결된 스크립트를 만들어 보겠습니다.
+- Create > Create Empty를 사용하여 새 빈 게임 오브젝트를 만듭니다.
+- 이 게임 오브젝트의 이름을 "게임 컨트롤러"로 바꿉니다.
+- 게임 컨트롤러를 선택한 상태에서
+  - ... 게임 컨트롤러의 변환 구성 요소를 재설정합니다.
+  - ... "GameController"라는 새 스크립트를 추가합니다.
+- Scripts 폴더에 GameController 스크립트를 저장합니다.
+- 편집을 위해 GameController 스크립트를 엽니다.
+
+다시 말하지만, 우리는 UI 도구 세트를 사용하고 있으므로 적절한 네임스페이스가 필요합니다.
+- 스크립트 상단에 UI 네임스페이스를 추가합니다.
+```cs
+using UnityEngine.UI;
+```
+GameController 스크립트는 게임의 모든 버튼에 대해 알아야 상태를 확인하고 그것이 승리했는지 판단할 수 있습니다. 
+이를 위해 스크립트는 모든 그리드 공간 버튼 컬렉션을 보유해야 합니다. 
+한 행에 3개의 일치하는 값이 있는지 확인하기 위해 Player Side에 대한 버튼의 Text 구성 요소를 확인하려고 할 것이므로 Text 유형의 배열을 만들어 보겠습니다.
+- 클래스에서 모든 샘플 코드를 제거합니다.
+- "buttonList"라는 공용 텍스트 배열을 만듭니다.
+```cs
+public Text[] buttonList;
+```
+
+유형 뒤의 대괄호 []는 이 변수가 배열임을 나타냅니다.
+
+최종 스크립트는 다음과 같아야 합니다
+
+```cs
+using UnityEngine;
+using UnityEngine.UI;
+using System.Collections;
+public class GameController : MonoBehaviour {
+    public Text[] buttonList;
+}
+```
+- 스크립트 저장
+- 유니티로 돌아가기
+
+이제 이 버튼 목록 배열을 만들었으므로 그리드 공간 버튼의 텍스트 구성 요소로 채워야 합니다. 
+여기서 순서가 중요하다는 것을 기억하십시오. 
+부모 그리드 공간 게임 오브젝트가 아닌 버튼 목록 배열에 자식 텍스트 게임 오브젝트를 연결하는 것도 중요합니다.
+
+인스펙터에서 게임 컨트롤러의 버튼 목록 배열을 채우는 한 가지 방법은 배열의 크기를 9로 설정한 다음 각 텍스트 게임 오브젝트를 한 번에 하나씩 배열로 드래그하는 것입니다. 
+이것은 약간 지루하고 시간이 많이 걸립니다. 
+그러나 이를 수행하는 더 쉬운 방법이 있습니다. 
+여기에는 인스펙터 창을 "잠그고" 모든 게임 오브젝트를 한 번에 어레이로 드래그하는 것이 포함됩니다.
+- 계층에서 게임 컨트롤러 게임 오브젝트를 선택합니다.
+- 인스펙터 창의 오른쪽 상단에서 잠금 버튼을 클릭합니다.
+
+그림 설명
+
+이것이 하는 일은 인스펙터 창이 현재 선택에서 포커스를 변경하는 것을 방지하는 것입니다(이 경우 게임 컨트롤러). 
+이 작업을 수행하지 않으면 다음 단계에서 하위 텍스트 게임 오브젝트를 선택할 때 인스펙터의 초점이 이러한 하위 텍스트 게임 오브젝트로 변경되고 게임의 배열로 드래그할 수 없습니다.
+
+또한 여러 개의 Inspector 창을 열어 원하는 창만 잠글 수 있다는 점도 주목할 가치가 있습니다.
+이를 통해 계층 구조 및 프로젝트 창에서 다양한 게임 오브젝트의 복잡한 보기가 가능합니다.
+
+- 아래쪽 화살표를 사용하여 Inspector에서 9개의 Grid Space 버튼을 엽니다.
+- Windows의 경우 <ctrl> + 클릭 또는 Mac의 경우 <cmd> + 클릭을 사용하여 모든 그리드 공간 게임 개체에서 자식 텍스트 게임 개체만 선택합니다.
+
+그림 설명
+
+- 게임 컨트롤러 게임 오브젝트의 잠긴 인스펙터로 드래그하여 크기 필드 위의 버튼 목록 이름에 놓습니다.
+
+그림 설명
+
+드래그 커서가 올바른 위치에 있으면 커서 옆에 작은 "+" 아이콘이 나타납니다. 
+위치를 놓치면 커서가 변경되어 드롭이 실패함을 나타내는 원과 슬래시 아이콘이 표시됩니다.
+
+9개의 텍스트 게임 오브젝트를 성공적으로 드롭하면 자동으로 버튼 목록 배열의 크기가 조정되고 모든 항목이 배열에 추가됩니다.
+
+그림 설명
+
+이 특별한 경우에는 지금 순서를 확인하는 것이 중요합니다. 
+자동으로 순서가 지정되어야 하지만 확인하는 것이 좋습니다.
+- 요소 필드를 클릭하여 각 요소를 순서대로 선택하십시오.
+이렇게 하면 참조로 연결된 GameObject가 강조 표시되어야 합니다.
+  
+그림 설명
+
+버튼 목록 배열의 각 요소는 올바른 게임 오브젝트에 대응해야 합니다. 
+요소 0은 그리드 공간과 연결되어야 하고, 요소 1은 그리드 공간(1)과 연결되어야 하며, 요소 2는 그리드 공간(2)과 연결되어야 합니다.
+
+이것이 맞다면,
+- 인스펙터 창을 잠금 해제하십시오.
+- 씬을 저장하세요.
+
+이제 플레이어가 턴을 하려면 그리드 공간 버튼이 게임 컨트롤러에 이동이 이루어지고 승리 조건을 확인해야 함을 알려야 합니다. 
+즉, 그리드 공간 버튼에는 GameController 구성 요소에 대한 참조가 있어야 합니다. 
+이것은 GameController 유형의 로컬 변수에 보관할 수 있습니다.
+
+GameController 구성 요소를 장면의 각 그리드 공간 버튼과 연결하는 한 가지 방법은 이 변수를 공개하고 장면의 각 그리드 공간 버튼 인스턴스에 대해 Inspector에서 이 public 속성을 채우는 것입니다. 
+자산이 참조 인스턴스를 보유할 수 없기 때문에 프로젝트 보기의 그리드 공간 프리팹과 장면의 게임 컨트롤러 인스턴스를 연결할 수 없습니다. 
+이 모든 드래그는 약간 지루할 수 있지만 프리팹 사용과 관련된 기본 워크플로 중 하나에도 반대합니다. 
+프리팹을 장면에 단순히 드롭하고 "그냥 작동"하게 할 수는 없습니다.
+
+그리드 공간 버튼에 대한 참조를 푸시하려면 그리드 공간 스크립트에 GameController 유형의 로컬 변수와 이를 설정하는 공개 함수가 필요합니다.
+- 편집을 위해 GridSpace 스크립트를 엽니다.
+- GameController에 대한 참조를 저장할 새 개인 변수를 추가합니다.
+```cs
+private GameController gameController;
+```
+- GameController를 매개변수로 사용하고 이를 참조로 gameController 변수에 할당할 수 있는 void를 반환하는 새 공개 함수를 만듭니다.
+```cs
+public void SetGameControllerReference (GameController controller) 
+{
+     gameController = controller;
+}
+```
+최종 스크립트는 다음과 같아야 합니다.
+
+```cs
+using UnityEngine;
+using System.Collections;
+using UnityEngine.UI;
+
+public class GridSpace : MonoBehaviour {
+
+    public Button button;
+    public Text buttonText;
+    public string playerSide;
+
+    private GameController gameController;
+
+    public void SetGameControllerReference (GameController controller)
+    {
+        gameController = controller;
+    }
+
+    public void SetSpace ()
+    {
+        buttonText.text = playerSide;
+        button.interactable = false;
+    }
+}
+```
+- 스크립트 저장
+- GameController 스크립트 수정
+- "SetGameControllerReferenceOnButtons"라는 void를 반환하는 새 함수를 만듭니다.
+
+```cs
+void SetGameControllerReferenceOnButtons () 
+{
+
+}
+```
+SetGameControllerReferenceOnButtons에서 모든 버튼을 반복하는 코드를 작성합니다. 
+이것은 buttonList 배열의 모든 요소를 반복하는 for 루프에서 가장 잘 수행됩니다.
+```cs
+for (int i = 0; i < buttonList.Length; i++) 
+{
+
+}
+```
+루프는 쉽습니다. 
+버튼 목록의 전체 길이를 반복하지만... 버튼 목록은 자식 텍스트 게임 오브젝트를 참조하므로 텍스트 게임 오브젝트의 부모에서 GridSpace 구성 요소를 잡아야 합니다. 
+어떻게 하면 될까요?
+
+GetComponentInParent를 호출할 수 있는 편리한 방법이 있습니다. 
+이를 통해 GetComponentInParent에 유형(우리의 경우 GridSpace)을 제공할 수 있으며 존재하는 경우 해당 구성 요소를 반환합니다.
+- 버튼 목록의 각 항목을 확인하는 코드를 추가하고 상위 GameObject의 GridSpace 구성 요소에서 GameController 참조를 설정합니다.
+```cs
+buttonList[i].GetComponentInParent<GridSpace>().SetGameControllerReference(this);
+```
+키워드 this는 이 클래스 또는 코드가 작성된 클래스를 나타냅니다. 
+이것을 SetGameControllerReference에 전달하면 클래스의 이 인스턴스에 대한 참조를 전달합니다. 
+각 GridSpace 인스턴스는 이를 사용하여 GameController에 대한 참조를 설정합니다.
+
+이제 게임이 시작될 때 SetGameControllerReferenceOnButtons 함수를 호출해야 합니다
+- void를 반환하는 Awake 함수를 만듭니다.
+- SetGameControllerReferenceOnButtons를 호출합니다.
+
+```cs
+void Awake () 
+{
+     SetGameControllerReferenceOnButtons();
+}
+```
+
+이제 버튼이 GameController에 대해 알고 적절한 참조가 있으므로 버튼이 두 가지 작업을 수행하기를 원합니다. 
+그리드 공간으로 이동하고, 일단 완료되면 게임 컨트롤러가 이제 턴이 끝났음을 알리고 게임 컨트롤러가 승리 조건을 확인하고 게임을 종료하거나 턴을 진행하는 쪽을 변경할 수 있도록 합니다.
+
+이렇게 하려면 GameController 스크립트에서 추가 기능을 설정해야 합니다.
+- 편집을 위해 GameController 스크립트를 엽니다.
+- "GetPlayerSide"라는 문자열을 반환하는 비어 있는 새 공용 함수를 만듭니다.
+```cs
+public string GetPlayerSide () 
+{
+     return "?";
+}
+```
+성공적으로 컴파일하려면 GetPlayerSide가 일부 문자열 값을 반환해야 하므로 여기에 "?"를 반환하는 더미 줄을 추가합니다.
+- "EndTurn"이라는 void를 반환하는 비어 있는 새 공용 함수를 만듭니다.
+```cs
+public void EndTurn () 
+{ 
+     Debug.Log("EndTurn is not implemented!"); 
+}
+```
+
+개발의 이 단계에서 두 개의 본질적으로 빈 함수를 생성한 방법에 유의하십시오.
+우리는 이러한 기능이 수행하기를 원하는 기본 아이디어를 알고 있지만 아직 콘텐츠를 개발하지 않았습니다. 
+나중에 "채울" 수 있지만 이러한 비어 있지만 실행 가능한 함수를 만들어 아직 자세히 생각할 준비가 되지 않은 다른 코드의 얽힘에 빠지지 않고 게임의 다른 부분에서 개발을 계속할 수 있습니다. 
+이 두 함수 모두 테스트를 위해 게임을 실행하면 완료되지 않는다는 표시기가 있습니다.
+GetPlayerSide는 "?"를 반환합니다.
+그리고 EndTurn은 "EndTurn이 구현되지 않았습니다!"라는 경고를 콘솔에 출력합니다.
+이렇게 하면 나중에 돌아가서 이러한 기능에 대해 작업해야 한다는 점을 분명히 알 수 있습니다.
+
+최종 스크립트는 아래와 같습니다.
+
+```cs
+using UnityEngine;
+using UnityEngine.UI;
+using System.Collections;
+
+public class GameController : MonoBehaviour {
+
+    public Text[] buttonList;
+
+    void Awake ()
+    {
+        SetGameControllerReferenceOnButtons();
+    }
+
+    void SetGameControllerReferenceOnButtons ()
+    {
+        for (int i = 0; i < buttonList.Length; i++)
+        {            buttonList[i].GetComponentInParent<GridSpace>().SetGameControllerReference(this);
+        }
+    }
+
+    public string GetPlayerSide ()
+    {
+        return "?";
+    }
+
+    public void EndTurn ()
+    {
+        Debug.Log("EndTurn is not implemented!");
+    }
+}
+```
+- 스크립트 저장  
+GameController의 이 두 가지 새로운 공개 함수를 사용하여 GridSpace에서 사용해야 합니다.
+- 편집을 위해 GridSpace 스크립트를 엽니다.
+- SetSpace 함수에서,
+  - ... 첫 번째 줄을 변경하여 buttonText.text에 GameController의 현재 값에서 직접 GetPlayerSide 값을 할당합니다.
+```cs
+buttonText.text = gameController.GetPlayerSide();
+```
+- SetSpace 함수에서
+  - 함수의 마지막 줄에 EndTurn을 호출하는 줄을 추가합니다
+```cs
+buttonText.text = gameController.GetPlayerSide();
+gameController.EndTurn();
+```
+
+이 시점에서 함수의 코드는 위에서 아래로 순서대로 실행된다는 것을 기억할 가치가 있습니다. 
+따라서 함수의 끝에 EndTurn을 호출하면 다른 모든 코드 후에 마지막으로 호출된다는 것을 알 수 있습니다. 
+SetSpace에서 비즈니스가 완료되었습니다.
+
+우리는 이제 더 이상 플레이어 라인을위한 지역 변수가 필요하지 않습니다.
+이 값은 현재 게임 컨트롤러에서 직접 가져옵니다.
+- playerSide 변수를 정의하는 줄을 제거합니다.
+```cs
+public string playerSide;
+```
+
+최종 스크립트는 아래와 같습니다.
+
+```cs
+using UnityEngine;
+using System.Collections;
+using UnityEngine.UI;
+
+public class GridSpace : MonoBehaviour {
+
+    public Button button;
+    public Text buttonText;
+
+    private GameController gameController;
+
+    public void SetGameControllerReference (GameController controller)
+    {
+        gameController = controller;
+    }
+
+    public void SetSpace ()
+    {
+        buttonText.text = gameController.GetPlayerSide();
+        button.interactable = false;
+        gameController.EndTurn();
+    }
+}
+```
+- 스크립트를 저장하십시오.
+- 유니티로 돌아가십시오.
+- 플레이 하십시오.
+- 공백 중 하나를 클릭하여 테스트합니다.
+
+이제 모든 것이 적어도 기술적으로 작동하는지 확인해야 합니다. 
+공백이 "?" 게임 컨트롤러와 매 턴마다 우리 콘솔은 "EndTurn이 구현되지 않았습니다!"라고 말하지만 플레이어 측 값은 이제 게임 컨트롤러에서 가져오고 플레이어가 버튼을 클릭하여 이동하면 게임 제어가 다시 전달됩니다.
+차례를 처리하기 위해 게임 컨트롤러에. 이제 기본 게임 플레이 동작을 버튼 요소 자체에서 제거하고 확장하여 이제 중앙 지점에서 전반적인 제어를 할 수 있습니다.
+
+다음 수업에서 우리는 승리를 위해 게임을 테스트할 것입니다.
+
 ## Getting Started
 
 Download links:
