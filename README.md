@@ -374,6 +374,120 @@ Text GameObject를 선택했으면 화면에 텍스트를 표시하기 위한 �
 
 다음 레슨에서는 이후 레슨에서 구축할 기초 게임 플레이 기능을 설정할 것입니다
 
+## 4.Foundation game play
+
+버튼이 있지만 현재 실제로는 아무 것도 하지 않습니다.
+
+이제 플레이어가 버튼 중 하나를 클릭할 때 발생하는 기능을 설정해야 합니다.
+
+일을 단순하게 유지하기 위해 플레이어가 버튼을 클릭할 때 격자 공간에 "X"를 할당한 다음 더 이상 변경되지 않도록 해당 버튼을 "잠금"으로 시작하겠습니다.
+
+이렇게 하려면 버튼 프리팹에 연결된 새 스크립트가 필요합니다
+- 프로젝트 창에서 "Scripts"라는 새 폴더를 만듭니다.
+- 프로젝트 창에서 "Grid Space" 프리팹을 선택합니다.
+- "Grid Space" 프리팹이 선택된 상태에서
+  - "GridSpace"라는 새 스크립트를 만들고 추가합니다.
+- Scripts 폴더에 GridSpace 스크립트를 보관합니다.
+
+그림 설명
+
+- 편집을 위해 GridSpace 스크립트를 엽니다.
+
+이 스크립트에서 로컬 Button 구성 요소와 자식 GameObject의 연결된 Text 구성 요소를 조작할 수 있으려면 먼저 Unity의 UI 도구 세트를 사용할 수 있는 적절한 네임스페이스가 필요하고 그런 다음 Button 구성 요소에 대한 참조가 필요합니다.
+관련 Text 구성 요소를 사용하여 해당 속성을 설정합니다. 
+우리는 또한 현재 측면의 값을 유지해야 합니다. 현재 측면은 단순히 "X"입니다.
+- 스크립트 상단에 UI 네임스페이스를 추가합니다.
+
+```cs
+using UnityEngine.UI;
+```
+
+네임스페이스에 대한 자세한 내용은 여기에서 자습서를 참조하세요.
+- GridSpace 클래스에서 모든 샘플 코드를 제거합니다.
+- "button"이라는 로컬 Button 구성 요소에 대한 공용 변수를 만듭니다.
+- "buttonText"라는 Button의 연결된 Text 구성 요소에 대한 공용 변수를 만듭니다
+- "playerSide"라는 "X"에 대한 공개 문자열 변수를 만듭니다.
+
+```cs
+public Button button; 
+public Text buttonText; 
+public string playerSide;
+```
+
+UI 버튼은 연결된 스크립트에서 공용 기능을 호출할 수 있습니다. 
+버튼을 클릭할 때 Do Something을 위한 공용 함수를 만들어야 합니다. 
+이 함수에서 "X" 값을 그리드 공간으로 설정한 다음 상호 작용할 수 없도록 하여 버튼 기능을 비활성화하려고 합니다. 
+Button 구성 요소의 상호 작용 가능한 속성을 사용하여 입력을 수락하거나 무시하도록 Button을 설정할 수 있습니다.
+
+- "SetSpace"라는 void를 반환하는 공용 함수를 만듭니다.
+- "SetSpace"에서는
+  - text 속성을 playerSide에서 "X"로 할당합니다.
+  - 버튼 자체를 상호 작용할 수 없도록 만듭니다.
+  
+```cs
+public void SetSpace () 
+{ 
+     buttonText.text = playerSide; 
+     button.interactable = false; 
+}
+```
+
+이 단원의 뒷부분에서 SetSpace 함수를 호출하도록 그리드 공간의 Button 구성 요소를 설정합니다.
+
+최종 스크립트는 다음과 같아야 합니다.
+
+```cs
+using UnityEngine;
+using System.Collections;
+using UnityEngine.UI;
+public class GridSpace : MonoBehaviour {
+    public Button button;
+    public Text buttonText;
+    public string playerSide;
+    public void SetSpace ()
+    {
+        buttonText.text = playerSide;
+        button.interactable = false;
+    }
+}
+```
+- 스크립트 저장
+- 유니티로 돌아가기
+
+이제 Inspector에서 방금 생성한 참조를 설정해야 합니다.
+- 프로젝트 창에서 Grid Space 프리팹을 선택합니다.
+- Grid Space 프리팹이 선택된 상태에서
+  - ... Grid Space 프리팹을 Button 속성으로 드래그합니다.
+  - ... Grid Space 프리팹의 자식 Text GameObject를 Button Text 속성으로 드래그합니다
+  - ... Player Side 속성을 "X"(또는 테스트하기 위해 선택한 다른 문자열 값)로 설정합니다.
+  
+그림 설명
+
+그리드 공간 구성 요소를 설정합니다. 이제 Button 자체를 설정해야 합니다.
+- 프로젝트 창에서 그리드 공간 프리팹을 선택합니다.
+- 그리드 공간 프리팹이 선택된 상태에서
+  - ... "+" 버튼을 사용하여 Button 구성 요소의 On Click 목록에 새 행을 추가합니다.
+  - ... 그리드 공간 프리팹을 새 행의 개체 필드로 드래그합니다.
+
+그림 설명
+
+Grid Space GameObject가 GridSpace 스크립트의 인스턴스를 운반하고 GridSpace 스크립트의 해당 인스턴스에서 공개 함수를 호출하기를 원하기 때문에 Grid Space 게임 오브젝트를 Button 구성 요소로 끌어오고 있습니다.
+
+- GridSpace 프리팹이 선택된 상태에서
+  - Button 구성 요소의 기능 풀다운 목록에서 GridSpace > SetSpace를 선택합니다.
+
+그림 설명
+
+- 씬 저장
+- 플레이 모드
+- 그리드에서 아무 공간이나 클릭합니다.
+
+그리드 공간을 클릭하면 이제 해당 공간에 Player Side 캐릭터를 할당하고 버튼을 비활성화해야 합니다.
+
+그림 설명
+
+이것은 거의 게임이 아니지만 우리 게임과 게임 플레이의 기초를 제시합니다.
+
 ## Getting Started
 
 Download links:
