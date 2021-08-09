@@ -801,6 +801,405 @@ public class GridSpace : MonoBehaviour {
 
 다음 수업에서 우리는 승리를 위해 게임을 테스트할 것입니다.
 
+## 6.Win conditions and taking turns
+
+우리는 보드의 그리드 공간을 테스트하고 승리가 있었는지 확인해야 합니다.
+플레이어 측이 제대로 설정되지 않았지만 그리드 공간의 Text 속성을 확인하여 문자열 값이 "연속 3개"와 일치하고 이 값이 현재 재생 중인 쪽과 일치하는지 확인해야 합니다.
+이렇게 하려면 현재 재생 중인 진영을 나타내는 캐릭터를 보유할 변수가 필요합니다. 
+이 변수는 교대로 회전하면서 결국 변경되지만 지금은 상수 값입니다.
+게임이 시작될 때 이 값을 설정해야 하며 "?" 대신 GetPlayerSide에서 이 값을 반환해야 합니다.
+- 편집을 위해 GameController 스크립트를 엽니다.
+- "playerSide"라는 개인 문자열 변수를 정의하십시오.
+```cs
+private string playerSide;
+```
+- Awake에서 playerSide를 "X"로 설정합니다
+```cs
+playerSide = "X";
+```
+- GetPlayerSide에서 "?" 대신 playerSide를 반환합니다.
+```cs
+return playerSide;
+```
+
+이제 GetPlayerSide를 호출할 때 playerSide를 GridSpace로 보내고, 측면을 교체할 때 현재 플레이어의 측면을 보내도록 설정합니다.
+다음 단계는 승리를 확인하는 것입니다.
+- EndTurn에서 Debug.Log 줄을 제거합니다.
+```cs
+Debug.Log("End Turn is not implemented");
+```
+승리를 확인하려면 보드의 3행, 3열, 2개의 대각선을 살펴보고 모든 시리즈의 격자 공간 3개가 모두 일치하는지 확인해야 합니다.
+
+이 게임은 무차별 대입을 사용하여 승리 조건을 테스트하기에 충분히 작습니다. 
+우리는 단순히 행을 확인하고 세 개의 공간이 현재 플레이어의 값과 비교하여 세 개의 공간이 모두 현재 플레이어와 일치하는지 확인할 수 있습니다.
+
+이 코드 줄은 EndTurn 함수로 이동해야 하므로 EndTurn을 호출할 때 현재 플레이어가 게임에서 이겼는지 확인합니다. 
+이것은 다소 복잡한 if 문을 만들어 수행됩니다. button0이 playerSide인지, button1이 playerSide인지, button2가 playerSide인지 확인합니다. 
+이 모든 것이 사실이면 우리는 승리합니다.
+- EndTurn 함수에 첫 번째 행을 확인하는 코드를 추가합니다.
+```cs
+if (buttonList [0].text == playerSide && buttonList [1].text == playerSide && buttonList [2].text == playerSide) 
+{
+
+}
+```
+
+이 코드 줄에서 맨 위 행을 확인하여 세 개의 공백이 모두 현재 플레이어와 일치하는지 확인합니다. 
+이것이 우리가 어떤 버튼이 어떤 공간에 있는지 정확히 알아야 하는 이유입니다. 
+그리드 공간이 왼쪽에서 오른쪽으로, 위에서 아래로 순서가 있다는 것을 알고 있으므로 buttonList [0], buttonList [1] 및 buttonList [2]의 텍스트 값을 확인하여 맨 위 행의 값을 확인할 것입니다.
+
+그림 설명
+
+이제 행, 열 또는 대각선이 승리에 대해 true로 테스트되면 게임을 종료하기 위해 몇 가지 작업을 수행해야 합니다. 
+최소한 게임을 계속할 수 없고 사용하지 않는 버튼을 클릭할 수 없도록 보드의 모든 버튼을 비활성화해야 합니다.
+
+따라서 승리 조건이 충족되면 "Game Over" 로직을 모두 수행할 수 있는 함수를 호출해 보겠습니다.
+
+- "GameOver"라는 void를 반환하는 함수를 추가합니다.
+
+```cs
+void GameOver () 
+{
+
+}
+```
+
+게임이 끝났을 때 우리가 취하고자 하는 첫 번째 행동은 사용하지 않는 모든 버튼을 끄는 것입니다. 
+이렇게 하려면 각 버튼에 액세스해야 합니다. 
+buttonList를 통해 이 작업을 수행할 수 있습니다. 
+상호 작용 가능한지 여부를 확인하기 위해 각 버튼을 실제로 테스트할 필요가 없습니다. 
+이것은 실행할 때 자원을 낭비하고 코딩할 때 시간을 낭비합니다. 
+buttonList의 모든 요소를 반복하여 모든 버튼을 상호 작용할 수 없도록 간단히 설정할 수 있습니다. 
+이미 수행한 이동으로 인해 해당 버튼이 이미 상호 작용할 수 없는 경우에는 계속 상호 작용할 수 없습니다. 
+속성은 단순히 상호 작용할 수 없는 동일한 값으로 설정됩니다. 
+이것은 한 줄의 스위치를 손으로 실행하고 모든 스위치를 끄는 것과 같습니다. 
+그들이 처음에 켜져 있었는지 꺼져 있었는지 여부는 중요하지 않습니다.
+- GameOver 함수에서 buttonList의 모든 요소를 반복하는 새로운 for 루프를 만듭니다.
+```cs
+for (int i = 0; i < buttonList.Length; i++) {
+
+}
+```
+- for 루프에서 목록의 각 요소에 대해 상위 GameObject의 Button 구성 요소를 찾아 상호 작용할 수 없도록 만들어 버튼을 비활성화합니다.
+```cs
+buttonList[i].GetComponentInParent<Button>().interactable = false;
+```
+이제 이 코드를 실행하기 위해 승리 조건이 충족되면 GameOver를 호출해야 합니다.
+- EndTurn의 if 문에서 GameOver에 대한 호출을 추가합니다.
+
+최종 스크립트는 다음과 같습니다.
+
+```cs
+using UnityEngine;
+using UnityEngine.UI;
+using System.Collections;
+
+public class GameController : MonoBehaviour {
+
+    public Text[] buttonList;
+
+    private string playerSide;
+
+    void Awake ()
+    {
+        SetGameControllerReferenceOnButtons();
+        playerSide = "X";
+    }
+
+    void SetGameControllerReferenceOnButtons ()
+    {
+        for (int i = 0; i < buttonList.Length; i++)
+        {
+            buttonList[i].GetComponentInParent<GridSpace>().SetGameControllerReference(this);
+
+        }
+    }
+
+    public string GetPlayerSide ()
+    {
+        return playerSide;
+    }
+
+    public void EndTurn ()
+    {
+        if (buttonList [0].text == playerSide && buttonList [1].text == playerSide && buttonList [2].text == playerSide)
+        {
+            GameOver();
+        }
+    }
+
+    void GameOver ()
+    {
+        for (int i = 0; i < buttonList.Length; i++)
+        {
+            buttonList[i].GetComponentInParent<Button>().interactable = false;
+        }
+    }
+}
+```
+- 스크립트 저장
+- 유니티 돌아가기
+- 플레이
+- 공백의 맨 위 행을 클릭하여 테스트합니다.
+
+맨 위 행의 세 공간을 모두 클릭하면 코드가 승리를 감지해야 합니다. 
+이 시점에서 나머지 버튼은 모두 비활성화되어야 합니다. 
+현재 다른 행, 열 또는 대각선 중 하나를 클릭하여 "승리"하려고 하면 게임이 승패를 감지하지 못합니다. .
+
+이제 나머지 행, 열 및 대각선을 확인해야 합니다.
+- 편집을 위해 GameController 스크립트를 엽니다.
+
+첫 번째 행을 확인하는 코드가 이미 있습니다. 이를 위해 코드는 다음 요소를 확인합니다.
+
+buttonList [0], buttonList [1] and buttonList [2]
+
+이제 나머지 가능한 조합을 확인해야 합니다.
+
+buttonList [3], buttonList [4] and buttonList [5] buttonList [6], buttonList [7] and buttonList [8]
+
+... 다음에 열:
+
+buttonList [0], buttonList [3] and buttonList [6] buttonList [1], buttonList [4] and buttonList [7] buttonList [2], buttonList [5] and buttonList [8]
+
+... 그리고 마지막으로 두 개의 대각선:
+
+buttonList [0], buttonList [4] and buttonList [8] buttonList [2], buttonList [4] and buttonList [6]
+
+그림 설명
+
+- 첫 번째 행을 7번 검사하는 코드를 복제하므로 총 8개의 사본이 있습니다. 각 열, 행 및 대각선에 대해 하나의 if 문.
+```cs
+if (buttonList [0].text == playerSide && buttonList [1].text == playerSide && buttonList [2].text == playerSide) { 
+     GameOver(); 
+}
+```
+
+- 각 if 문이 고유한 행, 열, 행 또는 대각선을 검사하도록 각 행, 열, 행 및 대각선에 대한 인덱스 값 [ ]을 변경합니다. (위의 열, 행 및 대각선 목록을 참조하십시오.) 예를 들어 다음은 두 번째 행을 확인하는 선입니다.
+```cs
+if (buttonList [3].text == playerSide && buttonList [4].text == playerSide && buttonList [5].text == playerSide) { 
+     GameOver(); 
+}
+```
+
+최종 스크립트는 다음과 같습니다.
+
+```cs
+using UnityEngine;
+using UnityEngine.UI;
+using System.Collections;
+
+public class GameController : MonoBehaviour {
+
+    public Text[] buttonList;
+
+    private string playerSide;
+
+    void Awake ()
+    {
+        SetGameControllerReferenceOnButtons();
+        playerSide = "X";
+    }
+
+    void SetGameControllerReferenceOnButtons ()
+    {
+        for (int i = 0; i < buttonList.Length; i++)
+        {
+            buttonList[i].GetComponentInParent<GridSpace>().SetGameControllerReference(this);
+        }
+    }
+
+    public string GetPlayerSide ()
+    {
+        return playerSide;
+    }
+
+    public void EndTurn ()
+    {
+        if (buttonList [0].text == playerSide && buttonList [1].text == playerSide && buttonList [2].text == playerSide)
+        {
+            GameOver();
+        }
+
+        if (buttonList [3].text == playerSide && buttonList [4].text == playerSide && buttonList [5].text == playerSide)
+        {
+            GameOver();
+        }
+
+        if (buttonList [6].text == playerSide && buttonList [7].text == playerSide && buttonList [8].text == playerSide)
+        {
+            GameOver();
+        }
+
+        if (buttonList [0].text == playerSide && buttonList [3].text == playerSide && buttonList [6].text == playerSide)
+        {
+            GameOver();
+        }
+
+        if (buttonList [1].text == playerSide && buttonList [4].text == playerSide && buttonList [7].text == playerSide)
+        {
+            GameOver();
+        }
+
+        if (buttonList [2].text == playerSide && buttonList [5].text == playerSide && buttonList [8].text == playerSide)
+        {
+            GameOver();
+        }
+
+        if (buttonList [0].text == playerSide && buttonList [4].text == playerSide && buttonList [8].text == playerSide)
+        {
+            GameOver();
+        }
+
+        if (buttonList [2].text == playerSide && buttonList [4].text == playerSide && buttonList [6].text == playerSide)
+        {
+            GameOver();
+        }
+    }
+
+    void GameOver ()
+    {
+        for (int i = 0; i < buttonList.Length; i++)
+        {
+            buttonList[i].GetComponentInParent<Button>().interactable = false;
+        }
+    }
+}
+```
+- 스크립트 저장
+- 유니티로 돌아가기
+- 플레이
+- 공백 중 하나를 클릭하여 테스트합니다.
+
+이제 가능한 모든 승리 조건이 작동해야 하며 승리 조건이 충족되면 보드가 비활성화되어야 합니다.
+
+다음으로, 턴이 완료되고 실제로 다른 사람과 플레이할 수 있을 때 측면을 변경해야 합니다.
+
+현재로서는 게임이 없습니다. 
+우리는 승리 조건을 확인할 수 있고 연속으로 3개의 "X"가 나오면 게임이 종료됩니다. 
+이제 우리는 측면을 바꿀 수 있어야 합니다. 
+편을 바꾸려면 우리가 어느 편에 있는지 확인하고 플레이어 값을 바꿔야 합니다. 
+"X"를 "O"로 바꾸거나 그 반대의 경우도 마찬가지입니다.
+
+이를 위해 플레이어 측면을 변경하는 함수를 생성해 보겠습니다.
+- "ChangeSides"라는 void를 반환하는 새 함수를 만듭니다.
+```cs
+void ChangeSides () 
+{
+
+}
+```
+
+그 기능에서 우리는 현재 팀을 테스트하고 플레이어의 팀을 교체해야 합니다.
+- playerSide 값을 확인하는 코드를 추가하고 다른 팀의 값을 playerSide에 할당합니다.
+```cs
+playerSide = (playerSide == "X") ? "O" : "X"; // Note: Capital Letters for "X" and "O"
+```
+턴이 끝날 때마다 면을 변경해야 하므로 EndTurn 함수의 끝에 ChangeSides를 호출해 보겠습니다.
+
+최종 스크립트는 다음과 같아야 합니다.
+
+```cs
+using UnityEngine;
+using UnityEngine.UI;
+using System.Collections;
+
+public class GameController : MonoBehaviour {
+
+    public Text[] buttonList;
+
+    private string playerSide;
+
+    void Awake ()
+    {
+        SetGameControllerReferenceOnButtons();
+        playerSide = "X";
+    }
+
+    void SetGameControllerReferenceOnButtons ()
+    {
+        for (int i = 0; i < buttonList.Length; i++)
+        {
+            buttonList[i].GetComponentInParent<GridSpace>().SetGameControllerReference(this);
+        }
+    }
+
+    public string GetPlayerSide ()
+    {
+        return playerSide;
+    }
+
+    public void EndTurn ()
+    {
+
+        if (buttonList [0].text == playerSide && buttonList [1].text == playerSide && buttonList [2].text == playerSide)
+        {
+            GameOver();
+        }
+
+        if (buttonList [3].text == playerSide && buttonList [4].text == playerSide && buttonList [5].text == playerSide)
+        {
+            GameOver();
+        }
+
+        if (buttonList [6].text == playerSide && buttonList [7].text == playerSide && buttonList [8].text == playerSide)
+        {
+            GameOver();
+        }
+
+        if (buttonList [0].text == playerSide && buttonList [3].text == playerSide && buttonList [6].text == playerSide)
+        {
+            GameOver();
+        }
+
+        if (buttonList [1].text == playerSide && buttonList [4].text == playerSide && buttonList [7].text == playerSide)
+        {
+            GameOver();
+        }
+
+        if (buttonList [2].text == playerSide && buttonList [5].text == playerSide && buttonList [8].text == playerSide)
+        {
+            GameOver();
+        }
+
+        if (buttonList [0].text == playerSide && buttonList [4].text == playerSide && buttonList [8].text == playerSide)
+        {
+            GameOver();
+        }
+
+        if (buttonList [2].text == playerSide && buttonList [4].text == playerSide && buttonList [6].text == playerSide)
+        {
+            GameOver();
+        }
+
+        ChangeSides();
+
+    }
+
+    void ChangeSides ()
+    {
+        playerSide = (playerSide == "X") ? "O" : "X";
+    }
+
+    void GameOver ()
+    {
+        for (int i = 0; i < buttonList.Length; i++)
+        {
+            buttonList[i].GetComponentInParent<Button>().interactable = false;
+        }
+    }
+}
+```
+- 스크립트 저장
+- 유니티로 돌아가기
+- 플레이 하기
+- 테스트 진행
+
+이제 아무 공간이나 클릭하면 "X"와 "O"가 번갈아가며 차례대로 "X" 또는 "O"가 3개 연속으로 나오면 승리 조건을 충족하고 게임이 종료됩니다.
+
+우리 게임은 본질적으로 끝났습니다! 
+이 단계에서는 실제로 Tic-Tac-Toe를 재생할 수 있습니다. 
+그러나 다음 단계는 사람들이 완료되고 플레이할 가치가 있다고 느끼는 적절한 게임으로 프로젝트를 다듬는 것입니다.
+
 ## Getting Started
 
 Download links:
