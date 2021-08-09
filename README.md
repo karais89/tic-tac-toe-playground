@@ -1395,6 +1395,208 @@ public class GameController : MonoBehaviour {
 
 다음 수업에서는 아무도 이기지 않고 게임이 무승부인 경우를 다룰 것입니다.
 
+## 8.Ending in a draw
+
+이제 승리를 처리할 수 있는 좋은 방법이 생겼습니다. 하지만 무승부라면 어떻게 될까요? 아니면 넥타이?
+
+자, 솔직히 말해서, 대부분의 Tic-Tac-Toe 게임은 동점 또는 무승부로 끝납니다. 
+이를 설명하기 위해 다른 무차별 대입 솔루션이 가장 좋습니다. 
+매 턴마다 모든 타일을 폴링하여 buttonList의 모든 Button 구성 요소가 상호 작용할 수 없는지 확인하여 모든 그리드 공간이 "사용"되었는지 확인할 수 있습니다.
+반면에 우리는 단순히 이동 횟수를 셀 수 있습니다. 이동 횟수가 9이고 아무도 이기지 못했다면 무승부입니다.
+- 편집을 위해 GameController 스크립트를 엽니다.
+- "moveCount"라는 private int 변수를 선언합니다.
+```cs
+private int moveCount;
+```
+- Awake에서 moveCount를 0으로 설정합니다.
+```cs
+moveCount = 0;
+```
+- EndTurn에서 함수 상단에서 moveCount를 1씩 증가시킵니다.
+```cs
+moveCount++;
+```
+
+함수 끝의 EndTurn에서 변을 바꾸기 전에 moveCount를 확인하고 9 이상이면 gameOverPanel을 활성화하고 gameOverText를 설정합니다.
+
+```cs
+if (moveCount >= 9) 
+{ 
+     gameOverPanel.SetActive(true); 
+     gameOverText.text = "It's a draw!"; 
+}
+```
+
+한 가지 걱정거리가 있지만...
+
+코드를 볼 때 Game Over Panel의 상태와 그 내용을 두 곳에서 설정하고 있습니다. 
+무승부라면 EndTurn에서 한 번, 이기면 GameOver에서 다시 한 번. 이것은 저를 걱정하게 하며 이것은 모범 사례가 아닙니다. 
+뭔가를 한다는 논리가 있다면 한 곳에 있어야 합니다.
+
+여기에는 몇 가지 이유가 있지만 주로 코드 유지 관리의 용이성과 코드를 읽을 때 코드를 이해하기 쉽기 때문입니다.
+코드 유지 관리는 매우 중요합니다.
+소프트웨어 프로젝트를 개발할 때 버그를 빠르게 찾고 수정할 수 있어야 합니다.
+그러나 더 중요한 것은 프로젝트를 개선하거나 새 기능이나 다른 기능으로 업그레이드할 때 가능한 한 간단한 방법으로 기능을 쉽게 찾고 변경하려는 것입니다. 
+우리의 논리가 코드베이스 전체에 퍼져 있으면 찾기가 어려울 뿐만 아니라 논리 또는 기능의 모든 인스턴스를 찾았는지 확인하고 수정하기가 매우 어렵습니다.
+
+Game Over Text를 설정하는 이 코드를 예로 들어 보겠습니다.
+Game Over Text가 설정되는 방식이나 해당 텍스트의 내용을 변경하려면 이것이 두 개의 다른 위치에 설정되어 있음을 기억하고 둘 다 수정해야 합니다. 
+그렇지 않으면 플레이어가 게임을 할 때만 발견할 수 있는 버그가 있습니다. 그건 좋지 않다.
+
+이제 프로젝트가 완료되면 작동하고 배송 가능하며 그 자체로 성공입니다.
+포인트 릴리스를 위해 기존 프로젝트에 새 기능을 추가하거나 원본을 기반으로 한 새 버전을 위해 프로젝트를 재사용하는 것은 훨씬 더 큰 성공입니다.
+깨끗하고 재사용 가능한 코드를 통해 이 모든 작업과 그 이상의 작업을 수행할 수 있습니다. 
+깨끗하고 재사용 가능한 코드는 시간과 좌절을 줄여줍니다. 
+코드가 깨끗하고 이해하기 쉬우며 재사용 가능하다면 좋은 코드입니다.
+
+이를 염두에 두고 이 모든 논리를 한 곳에 모아 보겠습니다.
+- 편집을 위해 GameController 스크립트를 엽니다.
+- 문자열 값을 매개변수로 사용하는 "SetGameOverText"라는 void를 반환하는 새 함수를 만듭니다.
+
+```cs
+void SetGameOverText(string value) 
+{
+
+}
+```
+GameOver에서 SetGameOverText로 코드를 복사하고 함수의 문자열 값 매개변수를 사용하도록 조정합니다.
+```cs
+gameOverPanel.SetActive(true); 
+gameOverText.text = value;
+```
+- gameOverPanel을 활성화하고 EndTurn에서 gameOverText를 설정하는 코드를 제거하고 "It's a draw!"가 있는 SetGameOverText 호출로 대체합니다. 인수로.
+```cs
+SetGameOverText("It's a draw!");
+```
+- GameOver에서 동일한 코드를 제거하고 SetGameOverText에 대한 호출로 대체합니다.
+```cs
+SetGameOverText(playerSide + " Wins!");
+```
+
+최종 스크립트는 다음과 같아야 합니다.
+```cs
+using UnityEngine;
+using UnityEngine.UI;
+using System.Collections;
+
+public class GameController : MonoBehaviour {
+
+    public Text[] buttonList;
+    public GameObject gameOverPanel;
+    public Text gameOverText;
+
+    private string playerSide;
+    private int moveCount;
+
+    void Awake ()
+
+    {
+        SetGameControllerReferenceOnButtons();
+        playerSide = "X";
+        gameOverPanel.SetActive(false);
+        moveCount = 0;
+    }
+
+    void SetGameControllerReferenceOnButtons ()
+    {
+        for (int i = 0; i < buttonList.Length; i++)
+        {
+            buttonList[i].GetComponentInParent<GridSpace>().SetGameControllerReference(this);
+        }
+    }
+
+    public string GetPlayerSide ()
+    {
+        return playerSide;
+    }
+
+    public void EndTurn ()
+    {
+        moveCount++;
+        if (buttonList [0].text == playerSide && buttonList [1].text == playerSide && buttonList [2].text == playerSide)
+        {
+            GameOver();
+        }
+
+        if (buttonList [3].text == playerSide && buttonList [4].text == playerSide && buttonList [5].text == playerSide)
+        {
+            GameOver();
+        }
+
+        if (buttonList [6].text == playerSide && buttonList [7].text == playerSide && buttonList [8].text == playerSide)
+        {
+            GameOver();
+        }
+
+        if (buttonList [0].text == playerSide && buttonList [3].text == playerSide && buttonList [6].text == playerSide)
+        {
+            GameOver();
+        }
+
+        if (buttonList [1].text == playerSide && buttonList [4].text == playerSide && buttonList [7].text == playerSide)
+        {
+            GameOver();
+        }
+
+        if (buttonList [2].text == playerSide && buttonList [5].text == playerSide && buttonList [8].text == playerSide)
+        {
+            GameOver();
+        }
+
+        if (buttonList [0].text == playerSide && buttonList [4].text == playerSide && buttonList [8].text == playerSide)
+        {
+            GameOver();
+        }
+
+        if (buttonList [2].text == playerSide && buttonList [4].text == playerSide && buttonList [6].text == playerSide)
+        {
+            GameOver();
+        }
+
+        if (moveCount >= 9)
+        {
+            SetGameOverText ("It's a draw!");
+        }
+
+        ChangeSides();
+    }
+
+    void ChangeSides ()
+    {
+        playerSide = (playerSide == "X") ? "O" : "X";
+    }
+
+    void GameOver ()
+    {
+        for (int i = 0; i < buttonList.Length; i++)
+        {
+            buttonList[i].GetComponentInParent<Button>().interactable = false;
+        }
+        SetGameOverText (playerSide + " Wins!");
+    }
+
+    void SetGameOverText (string value)
+    {
+        gameOverPanel.SetActive(true);
+        gameOverText.text = value;
+    }
+}
+```
+- 스크립트 저장
+- 유니티 돌아가기
+- 플레이
+- 테스트
+  
+자기 자신과의 경기에서 무승부를 거두는 것은 의외로 어렵죠? 
+한 쪽이 이기면 Game Over Text에 승자와 승자를 표시해야 합니다. 
+무승부라면 Game Over Text는 "무승부입니다!"라고 말해야 합니다.
+
+그림 설명
+
+테스트 하려면 플레이 모드를 종료하고 들어가 수동으로 게임을 다시 시작 해야 합니다.
+게임이 완료되면 애플리케이션을 다시 시작하지 않고 원하는 만큼 계속 플레이할 수 있기를 원할 것입니다. 
+다음 강의에서는 게임을 재설정하고 다시 시작하는 방법을 다룰 것입니다.
+
 ## Getting Started
 
 Download links:
