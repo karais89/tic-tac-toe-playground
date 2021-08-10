@@ -2840,6 +2840,767 @@ public class GameController : MonoBehaviour {
 
 다음 수업에서는 "X" 또는 "O"를 시작면으로 선택하는 방법을 살펴보겠습니다.
 
+## 11. Choosing the starting side and starting the game
+
+왜 "X"가 재미있어야 합니까?
+
+플레이어가 시작 쪽을 선택할 수 있도록 하려면 어떻게 해야 합니까?
+
+가장 쉬운 방법은 플레이어가 클릭할 수 있는 버튼을 제공하는 것입니다.
+
+플레이어 X 또는 플레이어 Y 패널을 클릭하기만 하면 편리할 것입니다. 
+불행히도 그것들은 버튼이 아닙니다. 
+이제 새 버튼 요소를 만들고 방금 만든 패널을 삭제한 다음 GameController에서 GameObject에 대한 참조를 교체하여 이러한 모든 요소를 새로 다시 연결할 수 있지만 이는 추가 작업과 시간이 소요됩니다.
+
+그러나 명심해야 할 한 가지 중요한 점은 Button 구성 요소가 바로 구성 요소라는 것입니다.
+
+기존 플레이어 패널 게임 개체에 Button 구성 요소를 추가하기만 하면 새 버튼을 수용하는 플레이어 패널의 Image 또는 Text 구성 요소에 대한 기존 참조를 변경할 필요가 없습니다.
+
+다중 선택 편집을 사용하여 두 플레이어 패널에 Button 구성 요소를 동시에 추가할 수 있습니다. 
+다중 선택 편집에 대한 자세한 내용은 다중 선택 편집 페이지를 참조하십시오.
+
+- Player X와 Player O 게임 오브젝트가 모두 닫혀 있거나 접혀 있는지 확인하십시오
+- 플레이어 X와 플레이어 O 게임 오브젝트를 모두 선택합니다.
+- 플레이어 X와 플레이어 O 게임 오브젝트가 모두 선택된 상태에서
+  - ... UI > 버튼을 사용하여 버튼 구성 요소를 추가합니다.
+
+그림 설명
+
+우리는 이러한 버튼이 기본적으로 상호 작용할 수 있기를 원하지 않습니다. 
+우리는 이러한 버튼을 제어하기를 원하며 게임의 적절한 상태에서 활성화할 것입니다
+- 플레이어 X와 플레이어 O 게임 오브젝트가 모두 선택된 상태에서
+  - ... 버튼의 전환을 없음으로 설정합니다.
+다음으로, 클릭되는 버튼에 반응하도록 코드를 업데이트해야 합니다.
+  - 편집을 위해 GameController 스크립트를 엽니다.
+
+UI Button에 반응하려면 새 Button 구성 요소에서 액세스할 수 있도록 공개 함수가 필요합니다.
+코드를 보면 Awake에서 시작 playerSide를 설정하고 RestartGame에서 재설정합니다.
+
+시작 측을 설정하려면 새로운 공개 함수가 필요합니다.
+- "startingSide"라는 문자열 매개변수가 있는 "SetStartingSide"라는 void를 반환하는 새 공용 함수를 만듭니다.
+- playerSide를 startingSide 매개변수로 설정합니다.
+- 논리가 playerSide가 "X"인지 확인하는 if/else 문을 추가하고,
+  - ... if가 true이면 새로운 플레이어로 playerX를 사용하여 SetPlayerColors를 호출합니다.
+  - ... if가 false이면 else 블록에서 새로운 플레이어로 playerO를 사용하여 SetPlayerColors를 호출합니다.
+  
+```cs
+public void SetStartingSide (string startingSide) 
+{ 
+     playerSide = startingSide; 
+     if (playerSide == "X") 
+     {
+          SetPlayerColors(playerX, playerO); 
+     } else 
+     {
+          SetPlayerColors(playerO, playerX); 
+     }
+}
+```
+
+이제 플레이어 버튼에 의해 호출될 함수에서 시작 쪽을 설정하고 있으므로 스크립트 내부에서 코드 설정 playerSide 또는 색 구성표를 제거해야 합니다.
+- Awake에서 line 설정 playerSide를 제거합니다.
+- Awake에서 SetPlayerColors를 호출하는 줄을 제거합니다.
+- RestartGame에서 라인 설정 playerSide를 제거하십시오.
+- RestartGame에서 SetPlayerColors를 호출하는 라인을 제거하십시오.
+
+이제 플레이어가 편을 선택할 때까지 기다리면 단순히 게임을 준비하고 플레이할 수 있도록 대기할 수 없습니다. 
+게임 보드는 상호 작용할 수 없는 상태에서 시작해야 하므로 시작 쪽을 선택하기 전에는 아무도 그리드 공간을 선택할 수 없습니다.
+따라서 이제 게임을 시작할 방법을 찾아야 합니다. 
+도움이 될 수 있는 RestartGame 기능이 있지만 RestartGame은 실제로 다른 작업을 수행하고 있습니다.
+
+우리의 게임과 게임이 진행되는 주기를 생각해 봅시다
+
+그는 게임이 실제로 몇 가지 뚜렷하게 다른 상태에 존재합니다.
+
+SetStartingSide를 만들기 전에는 게임이 게임 플레이 상태에서 시작되었습니다. 
+누구나 뛰어들고 게임을 시작할 수 있습니다. 
+GameOver 기능은 우리를 게임 오버라는 새로운 상태로 전환했습니다. 
+게임 오버 상태에서 게임 보드는 비활성화되고 승리 조건과 승자(있는 경우)가 표시됩니다. 
+RestartGame 함수는 우리를 게임 플레이 상태로 되돌릴 것입니다.
+
+이제 이 주기에 새 상태를 추가하고 있습니다.
+
+이것은 우리가 출발편을 선택해야 하는 대기 상태가 될 것입니다.
+
+이제 몇 가지 사항을 변경해야 합니다. 
+플레이 대기 상태에서 게임 플레이 상태로 전환하는 방법이 필요합니다. 
+이것은 플레이어 패널을 클릭하여 측면을 선택할 때 함수를 호출하여 수행됩니다. 
+또한 RestartGame을 변경하여 게임 재생 상태가 아닌 재생 대기 상태로 전환해야 합니다.
+
+가장 먼저 할 일은 재생 대기 상태를 설정하는 것입니다.
+
+재생 대기 상태에서는 게임 보드의 모든 그리드 공간이 상호 작용할 수 없도록 해야 합니다. 
+반면에 플레이어 패널의 버튼은 상호 작용할 수 있어야 합니다. 
+이 초기 상태는 Inspector와 Awake에서 게임 진입점으로 설정할 수 있습니다. 
+모든 그리드 공간을 상호 작용 불가능으로 설정하는 것으로 시작하겠습니다.
+- 스크립트 저장
+- 유니티로 돌아가기
+- 모든 그리드 공간 게임 오브젝트가 닫혀 있거나 접혀 있는지 확인하여 루트 게임 오브젝트만 인스펙터에 표시되도록 합니다.
+- 모든 그리드 공간 게임 오브젝트를 선택합니다.
+- 다중 선택 편집을 사용하여 Button 구성 요소의 상호 작용 가능한 속성을 false로 설정합니다.
+
+그림 설명
+
+에디터에 있는 동안 방금 작성한 SetStartingSide 함수에 버튼을 연결해 보겠습니다.
+- 플레이어 X와 플레이어 O 게임 오브젝트가 모두 닫혀 있거나 접혀 있는지 확인합니다.
+- 플레이어 X와 플레이어 O 게임 오브젝트를 모두 선택합니다.
+- 플레이어 X와 플레이어 O 게임 오브젝트가 모두 선택된 상태에서
+  - ... 버튼의 OnClick 목록에 새 행을 추가합니다.
+  - ... 게임 컨트롤러 GameObejct를 계층 창에서 Button의 OnClick 목록에 있는 새 행의 Object 필드로 드래그합니다.
+  - ... 버튼의 OnClick 목록에서 새 행의 기능을 GameController > SetStartingSide로 설정합니다.
+
+이제 클릭한 버튼에 따라 "X" 또는 "O"에 대한 매개변수를 전달해야 합니다. 
+버튼의 OnClick 목록에 있는 인수 필드를 사용하여 이를 수행할 수 있습니다. 
+버튼이 있고 인수가 필요한 공개 함수를 선택하면 인수 필드를 사용하여 보낼 수 있습니다.
+
+- Player X 게임 오브젝트만 선택하십시오.
+- 버튼의 OnClick 목록에 있는 인수 필드에서 값을 "X"로 설정합니다.
+
+그림 설명
+
+- Player O GameObject만 선택하십시오.
+- 버튼의 OnClick 목록에 있는 인수 필드에서 값을 "O"로 설정합니다.
+
+이것은 플레이어 패널에 있는 버튼의 기능을 설정합니다.
+- 장면 저장
+- 편집을 위해 GameController 스크립트를 엽니다.
+
+대기 상태에서 게임 플레이 상태로 전환하려면 플레이어 패널을 선택하고 시작 쪽을 선택했을 때 함수를 호출해야 합니다. 
+이 함수는 SetStartingSide에서 호출됩니다.
+- "StartGame"이라는 void를 반환하는 새 함수를 만듭니다.
+다음으로 StartGame을 호출해야 합니다. 이것을 하고자 하는 곳은 우리의 출발편을 선택한 후입니다.
+- SetStartingSide 끝에 StartGame에 대한 호출을 추가합니다.
+
+RestartGame은 이제 게임을 시작하는 대신 플레이 대기 상태로 우리를 안내합니다. 
+게임 보드를 상호 작용 가능으로 설정하는 것은 이제 StartGame에서 처리하므로 이동해야 합니다.
+- RestartGame에서
+  - ... SetBoardInteractable에 대한 호출을 차단합니다.
+- StartGame에서
+  - .. 호출을 SetBoardInteractable에 붙여넣습니다.
+
+```cs
+void StartGame () 
+{
+     SetBoardInteractable(true); 
+}
+```
+
+이것은 우리가 필요로 하는 기본 기능 코드를 설정합니다. 
+게임을 세련되게 보이게 하려면 코드가 조금 더 필요합니다. 
+버튼을 클릭하여 시작 쪽을 선택합니다. 
+우리는 게임이 플레이를 기다리고 있거나 플레이어가 다시 임의로 게임을 다시 시작할 수 있을 때만 이러한 버튼이 상호 작용할 수 있기를 원합니다. 
+재시작 버튼을 했던 것처럼 플레이어 패널이 상호 작용할 수 있는 시기를 제어해야 합니다.
+
+버튼에 대한 참조를 유지하기 위해 두 개의 새로운 변수를 추가할 수 있지만 이미 Player에 대한 정의가 있고 이러한 참조를 이미 사용하고 있으므로 Player 클래스에 플레이어 패널의 Button 구성 요소에 대한 참조를 추가하겠습니다.
+- Player 클래스에서
+  - ... "버튼"이라는 공개 버튼 변수를 추가합니다.
+```cs
+[System.Serializable] public class Player 
+{
+     public Image panel;
+     public Text text;
+     public Button button; 
+}
+```
+
+기본적으로 플레이어 패널의 버튼은 상호 작용할 수 있습니다. 
+이것이 우리가 Inspector에서 설정하는 방법입니다.
+이제 StartGame에서 게임 중에 사용할 수 없도록 꺼야 합니다. 
+RestartGame에서 플레이어가 다음 게임의 편을 선택할 수 있도록 다시 켜야 합니다.
+
+처음부터 제대로 해보자!
+- "toggle"이라는 부울 매개변수가 있는 "SetPlayerButtons"라는 void를 반환하는 새 함수를 만듭니다.
+- SetPlayerButtons에서
+  - ... playerX 버튼의 상호 작용 가능한 속성을 토글로 설정합니다.
+  - ... playerO 버튼의 상호 작용 가능한 속성을 토글로 설정합니다.
+
+```cs
+void SetPlayerButtons (bool toggle) 
+{
+     playerX.button.interactable = toggle; 
+     playerO.button.interactable = toggle;
+}
+```
+- StartGame에서
+  - ... false를 인수로 사용하여 SetPlayerButtons를 호출합니다.
+```cs
+SetPlayerButtons (false);
+```
+- RestartGame에서
+  - ... true를 인수로 사용하여 SetPlayerButtons를 호출합니다.
+```cs
+SetPlayerButtons (true);
+```
+
+이 단계를 테스트하기 전에 마지막으로 해야 할 일은 게임을 다시 시작할 때 현재 플레이어 패널에서 강조 표시를 제거하는 것입니다. 
+게임이 끝나면 마지막으로 턴을 한 플레이어의 패널이 강조 표시됩니다. 
+게임을 다시 시작할 때 이것을 시작 색상으로 다시 재설정해야 합니다. 
+다시 말하지만, 우리는 이 모든 코드를 모든 함수에서 쉽게 호출할 수 있는 단일 위치에 넣기를 원합니다.
+- "SetPlayerColorsInactive"라는 void를 반환하는 새 함수를 만듭니다.
+- 플레이어의 모든 패널과 텍스트를 비활성 색 구성표로 설정합니다.
+```cs
+void SetPlayerColorsInactive () { 
+  playerX.panel.color = inactivePlayerColor.panelColor;
+  playerX.text.color = inactivePlayerColor.textColor;
+  playerO.panel.color = inactivePlayerColor.panelColor; 
+  playerO.text.color = inactivePlayerColor.textColor; 
+}
+```
+- RestartGame에서
+  - ... SetPlayerColorsInactive를 호출합니다.
+
+이제 이 모든 코드를 한 곳에 넣고 원할 때마다 호출할 수 있으므로 무승부가 있을 때 SetPlayerColorsInactive에 대한 호출을 추가해 보겠습니다. 
+이렇게 하면 두 플레이어 모두 승리하지 못한 경우 패널이 강조 표시되지 않습니다.
+- GameOver에서 winPlayer가 "무승부"일 때,
+  - ... SetPlayerColorsInactive를 호출합니다.
+
+```cs
+if (winningPlayer == "draw") 
+{ 
+     SetGameOverText("It's a Draw!"); 
+     SetPlayerColorsInactive(); 
+}
+```
+
+최종 스크립트는 다음과 같아야 합니다.
+
+```cs
+using UnityEngine;
+using UnityEngine.UI;
+using System.Collections;
+
+[System.Serializable]
+public class Player {
+   public Image panel;
+   public Text text;
+   public Button button;
+}
+
+[System.Serializable]
+public class PlayerColor {
+   public Color panelColor;
+   public Color textColor;
+}
+
+public class GameController : MonoBehaviour {
+
+   public Text[] buttonList;
+   public GameObject gameOverPanel;
+   public Text gameOverText;
+   public GameObject restartButton;
+   public Player playerX;
+   public Player playerO;
+   public PlayerColor activePlayerColor;
+   public PlayerColor inactivePlayerColor;
+
+   private string playerSide;
+   private int moveCount;
+
+   void Awake ()
+   {
+       SetGameControllerReferenceOnButtons();
+       gameOverPanel.SetActive(false);
+       moveCount = 0;
+       restartButton.SetActive(false);
+   }
+
+   void SetGameControllerReferenceOnButtons ()
+   {
+       for (int i = 0; i < buttonList.Length; i++)
+       {
+           buttonList[i].GetComponentInParent<GridSpace>().SetGameControllerReference(this);
+       }
+   }
+
+   public void SetStartingSide (string startingSide)
+   {
+       playerSide = startingSide;
+       if (playerSide == "X")
+       {
+           SetPlayerColors(playerX, playerO);
+       } 
+       else
+       {
+           SetPlayerColors(playerO, playerX);
+       }
+
+       StartGame();
+   }
+
+   void StartGame ()
+   {
+       SetBoardInteractable(true);
+       SetPlayerButtons (false);
+   }
+
+   public string GetPlayerSide ()
+   {
+       return playerSide;
+   }
+
+   public void EndTurn ()
+   {
+       moveCount++;
+
+       if (buttonList [0].text == playerSide && buttonList [1].text == playerSide && buttonList [2].text == playerSide)
+       {
+           GameOver(playerSide);
+       } 
+       else if (buttonList [3].text == playerSide && buttonList [4].text == playerSide && buttonList [5].text == playerSide)
+       {
+           GameOver(playerSide);
+       } 
+       else if (buttonList [6].text == playerSide && buttonList [7].text == playerSide && buttonList [8].text == playerSide)
+       {
+           GameOver(playerSide);
+       } 
+       else if (buttonList [0].text == playerSide && buttonList [3].text == playerSide && buttonList [6].text == playerSide)
+       {
+           GameOver(playerSide);
+       } 
+       else if (buttonList [1].text == playerSide && buttonList [4].text == playerSide && buttonList [7].text == playerSide)
+       {
+           GameOver(playerSide);
+       } 
+       else if (buttonList [2].text == playerSide && buttonList [5].text == playerSide && buttonList [8].text == playerSide)
+       {
+           GameOver(playerSide);
+       } 
+       else if (buttonList [0].text == playerSide && buttonList [4].text == playerSide && buttonList [8].text == playerSide)
+       {
+           GameOver(playerSide);
+       } 
+       else if (buttonList [2].text == playerSide && buttonList [4].text == playerSide && buttonList [6].text == playerSide)
+       {
+           GameOver(playerSide);
+       } 
+       else if (moveCount >= 9)
+       {
+           GameOver("draw");
+       } 
+       else
+       {
+           ChangeSides();
+       }
+   }
+
+   void ChangeSides ()
+   {
+       playerSide = (playerSide == "X") ? "O" : "X";
+       if (playerSide == "X")
+       {
+           SetPlayerColors(playerX, playerO);
+       } 
+       else
+       {
+           SetPlayerColors(playerO, playerX);
+       }
+   }
+
+   void SetPlayerColors (Player newPlayer, Player oldPlayer)
+   {
+       newPlayer.panel.color = activePlayerColor.panelColor;
+       newPlayer.text.color = activePlayerColor.textColor;
+       oldPlayer.panel.color = inactivePlayerColor.panelColor;
+       oldPlayer.text.color = inactivePlayerColor.textColor;
+   }
+
+   void GameOver (string winningPlayer)
+   {
+       SetBoardInteractable(false);
+       if (winningPlayer == "draw")
+       {
+           SetGameOverText("It's a Draw!");
+           SetPlayerColorsInactive();
+       } 
+       else
+       {
+           SetGameOverText(winningPlayer + " Wins!");
+       }
+       restartButton.SetActive(true);
+   }
+
+   void SetGameOverText (string value)
+   {
+       gameOverPanel.SetActive(true);
+       gameOverText.text = value;
+   }
+
+   public void RestartGame ()
+   {
+       moveCount = 0;
+       gameOverPanel.SetActive(false);
+       restartButton.SetActive(false);
+       SetPlayerButtons (true);
+       SetPlayerColorsInactive();
+
+       for (int i = 0; i < buttonList.Length; i++)
+       {
+           buttonList [i].text = "";
+       }
+   }
+
+   void SetBoardInteractable (bool toggle)
+   {
+       for (int i = 0; i < buttonList.Length; i++)
+       {
+           buttonList[i].GetComponentInParent<Button>().interactable = toggle;
+       }
+   }
+
+   void SetPlayerButtons (bool toggle)
+   {
+       playerX.button.interactable = toggle;
+       playerO.button.interactable = toggle;  
+   }
+
+   void SetPlayerColorsInactive ()
+   {
+       playerX.panel.color = inactivePlayerColor.panelColor;
+       playerX.text.color = inactivePlayerColor.textColor;
+       playerO.panel.color = inactivePlayerColor.panelColor;
+       playerO.text.color = inactivePlayerColor.textColor;
+   }
+}
+```
+- 스크립트 저장
+- 유니티로 돌아가기
+
+게임 컨트롤러의 플레이어 버튼 참조를 두 개의 플레이어 게임 오브젝트와 연결해야 합니다
+
+- 게임 컨트롤러 게임 오브젝트를 선택합니다.
+- 게임 컨트롤러 게임 오브젝트가 선택된 상태에서
+  - ... 플레이어 X 게임 오브젝트를 플레이어 X 버튼 필드로 드래그합니다.
+  - ... 플레이어 O 게임 오브젝트를 플레이어 O 버튼 필드로 드래그합니다.
+
+그림 설명
+
+- 장면 저장
+- 플레이
+- 테스트
+
+게임 보드에 처음 오면 모든 그리드 공간이 비활성화됩니다. 
+우리는 그들과 아무 것도 할 수 없습니다. 
+게임을 시작하려면 "X" 또는 "O"를 클릭하여 측면을 선택해야 합니다. 
+우리 편을 선택하면 게임이 정상적으로 진행됩니다. 
+게임이 끝나면 승리 조건을 표시하는 배너가 표시되고 다시 시작 버튼이 표시됩니다. 
+무승부일 경우 두 플레이어 모두 승자로 강조 표시되지 않습니다. 
+게임을 다시 시작할 때 새로운 시작 쪽을 선택할 수 있습니다.
+
+여기서 내가 본 유일한 문제는 게임을 처음 볼 때 우리가 무엇을 해야 할지 모른다는 것입니다. 
+게임 보드가 잠겨 있습니다. 
+비활성화되어 있습니다. 
+"X" 또는 "O"를 클릭해야 한다는 사실을 모르는 경우 게임이 중단되었다고 생각하고 종료할 수 있습니다.
+
+마지막이자 마지막 단계로 사이드를 선택하도록 알려주는 작은 설명 패널을 추가해 보겠습니다.
+- Hierarchy에서 Restart Button GameObject를 복제합니다.
+- 재시작 버튼(1) 게임 오브젝트를 선택합니다.
+- 재시작 버튼(1) GameObject가 선택된 상태에서
+  - ... GameObject의 이름을 "Start Info"로 바꿉니다.
+  - ... 사전 설정을 사용하여 이미지 구성 요소의 색상을 파란색(0, 204, 204, 255)으로 설정합니다.
+
+UI Button 요소를 복제했습니다. 
+그러나 우리는 버튼 기능을 원하지 않습니다. 
+우리는 단순히 이 UI 요소가 배경과 텍스트가 있는 디스플레이 패널이 되기를 원합니다. 
+이제 구성 요소 추가 메뉴를 사용하여 패널에 Button 구성 요소를 추가한 것처럼 구성 요소를 제거하여 GameObject에서 Button 및 해당 기능을 간단히 제거할 수도 있습니다.
+
+- 시작 정보 게임 오브젝트가 선택된 상태에서
+  - ... 상황에 맞는 기어 메뉴를 사용하여 Button 구성 요소를 제거합니다.
+
+이제 패널에 표시되는 텍스트를 변경해야 합니다.
+
+- 시작 정보 게임 오브젝트의 자식 텍스트 게임 오브젝트를 선택합니다.
+- Text GameObject를 선택한 상태에서
+  - .. Text 속성을 "X 또는 O?"로 설정 그리고 새로운 라인에서 "Choose side!".
+  - .. 글꼴 크기를 21로 설정합니다.
+  
+그림 설명
+
+이제 우리가 해야 할 일은 이 패널을 설정하여 게임의 대기 중 상태에서 편을 선택해야 할 때만 표시되도록 하는 것입니다.
+- 편집을 위해 GameController 스크립트를 엽니다.
+- "startInfo"라는 공개 GameObject 변수를 선언하십시오.
+```cs
+public GameObject startInfo;
+```
+
+이 패널은 활성 상태에서 시작됩니다. 
+이것이 Inspector에서 설정한 방법이며 Awake에서 이 상태를 수정하지 않았습니다. 
+플레이어가 편을 선택하고 게임이 시작되면 패널을 비활성화하려고 합니다. 
+게임이 끝나고 플레이어가 다시 시작을 선택하면 다시 활성화하려고 합니다.
+
+- StartGame에서
+  - .. startInfo 게임 오브젝트를 비활성화합니다.
+```cs
+startInfo.SetActive(false);
+```
+- RestartGame에서
+  ... startInfo 게임 오브젝트를 활성화합니다.
+```cs
+startInfo.SetActive(true);
+```
+최종 스크립트는 다음과 같아야 합니다.
+```cs
+using UnityEngine;
+using UnityEngine.UI;
+using System.Collections;
+
+[System.Serializable]
+public class Player {
+   public Image panel;
+   public Text text;
+   public Button button;
+}
+
+[System.Serializable]
+public class PlayerColor {
+   public Color panelColor;
+   public Color textColor;
+}
+
+public class GameController : MonoBehaviour {
+
+   public Text[] buttonList;
+   public GameObject gameOverPanel;
+   public Text gameOverText;
+   public GameObject restartButton;
+   public Player playerX;
+   public Player playerO;
+   public PlayerColor activePlayerColor;
+   public PlayerColor inactivePlayerColor;
+   public GameObject startInfo;
+
+   private string playerSide;
+   private int moveCount;
+
+   void Awake ()
+   {
+       SetGameControllerReferenceOnButtons();
+       gameOverPanel.SetActive(false);
+       moveCount = 0;
+       restartButton.SetActive(false);
+   }
+
+   void SetGameControllerReferenceOnButtons ()
+   {
+       for (int i = 0; i < buttonList.Length; i++)
+       {
+           buttonList[i].GetComponentInParent<GridSpace>().SetGameControllerReference(this);
+       }
+   }
+
+   public void SetStartingSide (string startingSide)
+   {
+       playerSide = startingSide;
+       if (playerSide == "X")
+       {
+           SetPlayerColors(playerX, playerO);
+       } 
+       else
+       {
+           SetPlayerColors(playerO, playerX);
+       }
+
+       StartGame();
+   }
+
+   void StartGame ()
+   {
+       SetBoardInteractable(true);
+       SetPlayerButtons (false);
+       startInfo.SetActive(false);
+   }
+
+   public string GetPlayerSide ()
+   {
+       return playerSide;
+   }
+
+   public void EndTurn ()
+   {
+       moveCount++;
+
+       if (buttonList [0].text == playerSide && buttonList [1].text == playerSide && buttonList [2].text == playerSide)
+       {
+           GameOver(playerSide);
+       } 
+       else if (buttonList [3].text == playerSide && buttonList [4].text == playerSide && buttonList [5].text == playerSide)
+       {
+           GameOver(playerSide);
+       } 
+       else if (buttonList [6].text == playerSide && buttonList [7].text == playerSide && buttonList [8].text == playerSide)
+       {
+           GameOver(playerSide);
+       } 
+       else if (buttonList [0].text == playerSide && buttonList [3].text == playerSide && buttonList [6].text == playerSide)
+       {
+           GameOver(playerSide);
+       } 
+       else if (buttonList [1].text == playerSide && buttonList [4].text == playerSide && buttonList [7].text == playerSide)
+       {
+           GameOver(playerSide);
+       } 
+       else if (buttonList [2].text == playerSide && buttonList [5].text == playerSide && buttonList [8].text == playerSide)
+       {
+           GameOver(playerSide);
+       } 
+       else if (buttonList [0].text == playerSide && buttonList [4].text == playerSide && buttonList [8].text == playerSide)
+       {
+           GameOver(playerSide);
+       } 
+       else if (buttonList [2].text == playerSide && buttonList [4].text == playerSide && buttonList [6].text == playerSide)
+       {
+           GameOver(playerSide);
+       } 
+       else if (moveCount >= 9)
+       {
+           GameOver("draw");
+       } 
+       else
+       {
+           ChangeSides();
+       }
+   }
+
+   void ChangeSides ()
+   {
+       playerSide = (playerSide == "X") ? "O" : "X";
+       if (playerSide == "X")
+       {
+           SetPlayerColors(playerX, playerO);
+       } 
+       else
+       {
+           SetPlayerColors(playerO, playerX);
+       }
+   }
+
+   void SetPlayerColors (Player newPlayer, Player oldPlayer)
+   {
+       newPlayer.panel.color = activePlayerColor.panelColor;
+       newPlayer.text.color = activePlayerColor.textColor;
+       oldPlayer.panel.color = inactivePlayerColor.panelColor;
+       oldPlayer.text.color = inactivePlayerColor.textColor;
+   }
+
+   void GameOver (string winningPlayer)
+   {
+       SetBoardInteractable(false);
+       if (winningPlayer == "draw")
+       {
+           SetGameOverText("It's a Draw!");
+           SetPlayerColorsInactive();
+       } 
+       else
+       {
+           SetGameOverText(winningPlayer + " Wins!");
+       }
+       restartButton.SetActive(true);
+   }
+
+   void SetGameOverText (string value)
+   {
+       gameOverPanel.SetActive(true);
+       gameOverText.text = value;
+   }
+
+   public void RestartGame ()
+   {
+       moveCount = 0;
+       gameOverPanel.SetActive(false);
+       restartButton.SetActive(false);
+       SetPlayerButtons (true);
+       SetPlayerColorsInactive();
+       startInfo.SetActive(true);
+
+       for (int i = 0; i < buttonList.Length; i++)
+       {
+           buttonList [i].text = "";
+       }
+   }
+
+   void SetBoardInteractable (bool toggle)
+   {
+       for (int i = 0; i < buttonList.Length; i++)
+       {
+           buttonList[i].GetComponentInParent<Button>().interactable = toggle;
+       }
+   }
+
+   void SetPlayerButtons (bool toggle)
+   {
+       playerX.button.interactable = toggle;
+       playerO.button.interactable = toggle;  
+   }
+
+   void SetPlayerColorsInactive ()
+   {
+       playerX.panel.color = inactivePlayerColor.panelColor;
+       playerX.text.color = inactivePlayerColor.textColor;
+       playerO.panel.color = inactivePlayerColor.panelColor;
+       playerO.text.color = inactivePlayerColor.textColor;
+   }
+}
+```
+
+- 스크립트 저장
+- 유니티로 돌아아기
+
+이제 시작 정보 게임 오브젝트를 게임 컨트롤러에 연결하기만 하면 됩니다.
+
+- 게임 컨트롤러 게임 오브젝트를 선택합니다.
+- 게임 컨트롤러 게임 오브젝트가 선택된 상태에서
+  - ... 시작 정보 게임 오브젝트를 시작 정보 필드로 드래그합니다.
+
+그림 설명
+
+- 장면 저장
+- 플레이
+- 테스트
+
+이제 우리는 끝났습니다.
+
+우리는 플레이를 기다리는 상태에서 시작합니다. 
+시작 플레이어가 원하는 면을 선택할 수 있도록 면과 두 개의 버튼을 선택해야 함을 알려주는 작은 지침 텍스트가 있습니다.
+
+플레이어가 편을 선택하면 게임이 시작됩니다. 
+이렇게 하면 지침 텍스트가 제거되고 플레이어 버튼이 상호 작용할 수 없게 되며 그리드 공간 버튼을 상호 작용 가능하게 만들어 게임 보드가 활성화됩니다.
+
+게임 플레이를 통해 그리드 공간을 선택할 수 있습니다. 
+그리드 공간과 연결된 버튼은 게임 컨트롤러에 현재 플레이어 쪽을 요청하고 적절한 텍스트로 그리드 공간을 설정한 다음 상호 작용할 수 없는 것으로 설정합니다. 
+마지막 동작으로 그리드 공간 버튼은 제어를 게임 컨트롤러에 다시 넘겨 승리 조건을 확인하고 게임이 끝나지 않은 경우 게임 컨트롤러가 측면을 변경하고 게임이 계속됩니다.
+
+게임이 끝나면 상태를 게임 오버 상태로 다시 변경합니다. 여기에서 우승 패널을 표시하고 다시 시작 버튼을 활성화합니다.
+
+다시 시작 버튼을 선택하면 시작 상태로 돌아가고 플레이어가 편을 선택할 수 있는 지침 텍스트와 버튼이 있는 플레이를 기다리고 있습니다.
+
+그림 설명
+
+이 프로젝트를 보다 완성도 높은 게임으로 만들기 위해 할 수 있는 일이 훨씬 더 많습니다. 
+우리는 당신에게 그것을 맡깁니다. 시도할 수 있는 사항은 다음과 같습니다.
+- 게임 시작 시 스플래시 화면
+- 점수 계산 - "누가 가장 많은 게임을 이겼습니까?
+- 사운드
+- 음악
+- 애니메이션
+
+이 프로젝트에서 몇 가지 점을 제거해 주셨으면 합니다.
+
+하나는 UI가 다재다능한 도구 세트이고 언뜻 보기에는 명확하지 않을 수 있는 UI 및 UI 요소에 대한 용도가 있을 수 있다는 것입니다.
+
+다른 하나는 한 번에 하나의 문제를 해결하여 프로젝트에 접근할 수 있다는 것입니다. 
+시작하기 전에 모든 솔루션을 알 필요는 없습니다. 
+프로젝트를 조각으로 나눕니다. 
+함수나 스크립트가 필요하지만 아직 작업을 시작할 준비가 되지 않았다면 빈 자리 표시자를 만들고 현재 문제를 계속 진행하십시오.
+
+코드를 정리하세요. DoSomething()이 필요한 경우 이를 수행하는 함수를 만들고 해당 함수를 호출합니다.
+코드, 특히 중복 코드가 프로젝트 전체에 흩어져 있지 마십시오.
+
+프로젝트를 개발하면서 변경하고 리팩토링합니다. 
+그렇게 하는 것을 두려워하지 마십시오. 
+한 번에 하나의 문제를 해결하면서 코드를 여러 번 확장, 재작성 및 리팩토링하게 됩니다.
+
+읽어 주셔서 감사합니다. 질문이나 의견이 있으면 공식 포럼 스레드를 참조하십시오.
+
 ## Getting Started
 
 Download links:
