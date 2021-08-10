@@ -2238,6 +2238,608 @@ GameOver 함수는 모든 게임 오버 로직을 처리합니다.
 
 다음 레슨에서는 누구의 차례인지 표시하기 위해 두 개의 작은 패널을 만들 것입니다.
 
+## 10.Whose turn is it?
+
+언뜻 보면 누구의 차례인지 알기 어렵습니다.
+
+누구의 차례인지 표시하기 위해 "X"와 "O"가 있는 작은 패널을 만들어 색상을 변경하여 현재 플레이어를 나타냅니다.
+
+- 만들기 > UI > 패널을 사용하여 장면에서 UI 패널 요소 만들기
+- 패널 게임 오브젝트가 선택된 상태에서
+  - ... 게임 오브젝트의 이름을 "Player X"로 바꿉니다.
+  - ... 상황에 맞는 기어 메뉴를 사용하여 RectTransform을 재설정합니다.
+  - ... 패널을 (-206, 330)으로 드래그합니다.
+
+그림 설명
+
+지금까지 튜토리얼을 정확히 따랐다면 RectTransform Position(-206, 330)이 Board 패널의 가장자리와 정렬되어야 하고 Restart 버튼과 정렬되어야 합니다.
+- Player X GameObject가 선택된 상태에서
+  - 사전 설정을 사용하여 색상을 매우 진한 파란색(33, 44, 55, 255)으로 설정합니다.
+  - UI 텍스트 요소를 자식으로 추가합니다.
+
+참고: Player X 게임 오브젝트가 선택된 상태에서 마우스 오른쪽 버튼을 클릭하고 UI > 텍스트를 선택하여 컨텍스트 메뉴를 사용하는 것이 가장 좋습니다.
+새 UI 요소를 자식으로 추가하여 UI 요소를 얼마나 쉽게 추가하고 수정할 수 있는지도 주목할 가치가 있습니다.
+
+- Player X GameObject의 자식인 Text GameObject를 선택합니다.
+- 이 Text GameObject를 선택한 상태에서
+  - ... Anchor, Pivot 및 Position을 늘이기 위해 설정합니다.
+  - ... Text 속성을 "X"로 설정합니다.
+  - ... 글꼴 크기를 86으로 설정합니다.
+  - ... 정렬을 중간/중앙으로 설정합니다.
+  - ... 사전 설정을 사용하여 색상을 파란색(0, 204, 204, 255)으로 설정합니다.
+- Player X 게임 오브젝트를 복제합니다
+- Player X (1) GameObject를 선택하고 이름을 "Player O"로 바꿉니다.
+- Player O GameObject가 선택된 상태에서
+  - ... RectTransform Position X를 -206이 아닌 206으로 변경합니다.
+  - ... Text 속성을 "O"로 설정합니다.
+
+코드에서 현재 활성 패널을 새롭고 더 밝은 색 구성표로 수정하므로 두 플레이어 패널을 모두 진한 파란색 배경과 파란색 텍스트가 있는 동일한 어두운 색 구성표로 설정합니다. 
+이 시점에서 "X"는 기본 시작면입니다. 
+처음에는 "X"의 플레이어 패널을 더 밝은 색 구성표로 설정할 수 있었지만, 특히 플레이어가 시작 면을 선택하게 하는 경우 이것이 가능성을 제한할 수 있다는 것을 이 단원에서 더 자세히 알게 될 것입니다.
+
+그림 설명
+
+일을 쉽게 하기 위해 이 단계에서는 GameController 스크립트에서 사용할 수 있는 일반적인 방식으로 플레이어 디스플레이를 설명하는 것이 가장 좋습니다.
+플레이어 디스플레이에 대한 모든 관련 세부 정보를 보유하는 클래스를 생성하여 이를 수행할 수 있습니다.
+이 Player 클래스는 배경 및 텍스트를 포함하여 플레이어 아이콘 패널의 정의를 보유합니다.
+
+- 편집을 위해 GameController 스크립트를 엽니다.
+- 스크립트 상단의 네임스페이스 정의 아래에 있지만 GameController 클래스 정의 전에,
+  - ... "Player"라는 새 공개 클래스를 만듭니다.
+- 플레이어에서,
+  - ... "패널"이라는 새로운 공개 이미지 변수를 정의합니다.
+  - ... "text"라는 새 공용 Text 변수를 정의합니다.
+
+또한 활성 색 구성표와 비활성 색 구성표를 번갈아 사용해야 합니다. 
+이것들은 GameController 스크립트에서 직접 설정할 수 있지만 Player 클래스에서 했던 것처럼 PlayerColor 클래스를 만들어 비슷한 방식으로 색 구성표를 정의하는 것이 더 깔끔할 수 있습니다.
+
+- 스크립트 상단의 네임스페이스 정의 아래에 있지만 GameController 클래스 정의 전에,
+  - .. "PlayerColor"라는 새 공개 클래스를 만듭니다.
+- PlayerColor에서
+  - ... "panelColor"라는 새 공용 Color 변수를 정의합니다.
+  - .. "textColor"라는 새 공용 Color 변수를 정의합니다.
+
+이 시점에서 이 두 클래스는 스크립트에 인스턴스를 포함하더라도 인스펙터 창에 표시되지 않습니다. 
+속성을 쉽게 설정할 수 있도록 인스펙터에서 볼 수 있어야 합니다. 
+이 두 클래스를 Inspector에서 볼 수 있으려면 Unity에서 직렬화해야 합니다. 
+[System.Serializable] 특성을 사용하여 이러한 클래스를 직렬화할 수 있습니다. 
+자세한 내용은 [System.Serializable] 속성 페이지와 Unity의 직렬화 페이지를 참조하십시오.
+
+```cs
+[System.Serializable] public class Player 
+{
+     public Image panel;
+     public Text text; 
+}
+
+[System.Serializable] public class PlayerColor 
+{
+     public Color panelColor;
+     public Color textColor; 
+}
+```
+
+GameController 클래스의 본문에서 Player의 새 인스턴스 2개와 PlayerColor의 새 인스턴스 2개가 필요합니다.
+- "playerX"라는 새로운 공개 플레이어 변수를 정의하십시오.
+- "playerO"라는 새로운 공개 플레이어 변수를 정의하십시오.
+- "activePlayerColor"라는 새 공용 PlayerColor 변수를 정의합니다.
+- "inactivePlayerColor"라는 새 공용 PlayerColor 변수를 정의합니다.
+
+이 단계에서는 모든 것이 제대로 작동하고 직렬화가 올바르게 설정되었는지 확인하는 것이 가장 좋습니다.
+
+- 스크립트 저장
+- 유니티로 돌아가기
+
+이제 인스펙터 창에 플레이어 X, 플레이어 O, 활성 플레이어 색상 및 비활성 플레이어 색상이 표시되어야 합니다.
+
+그림 설명
+
+Unity 에디터에 있는 동안 두 개의 Player 속성과 두 개의 PlayerColor 속성을 설정해 보겠습니다.
+
+- GameController GameObejct를 선택합니다.
+- 게임 컨트롤러를 선택한 상태에서
+  - ... 플레이어 X의 드롭다운을 엽니다.
+  - ... Player X 패널 속성을 Player X 게임 오브젝트에 할당
+  - .. Player X GameObject와 연결된 Text GameObject에 Player X Text 속성을 할당합니다.
+
+그림 설명
+
+- 게임 컨트롤러를 선택한 상태에서
+  - ... 플레이어 O의 드롭다운을 엽니다.
+  - ... Player O 패널 속성을 Player X 게임 오브젝트에 할당
+  - .. Player O GameObject와 연결된 Text GameObject에 Player O Text 속성을 할당합니다.
+  - .. 활성 플레이어 색상 드롭다운을 엽니다.
+  - .. 사전 설정을 사용하여 패널 색상을 파란색(0, 204, 204, 255)으로 설정합니다.
+  - ... 사전 설정을 사용하여 텍스트 색상을 분홍색(255, 0, 102, 255)으로 설정합니다.
+  - ... 비활성 플레이어 색상 드롭다운을 엽니다.
+  - .. 사전 설정을 사용하여 패널 색상을 매우 진한 파란색(33, 44, 55, 255)으로 설정합니다.
+  - ... 사전 설정을 사용하여 텍스트 색상을 파란색(0, 204, 204, 255)으로 설정합니다.
+  
+그림 설명
+
+이제 인스펙터에서 플레이어 패널과 플레이어 색상을 쉽고 명확하게 정의할 수 있습니다.
+
+이 접근 방식에는 GameController 스크립트에서 이러한 8가지 속성을 모두 직접 선언하는 것보다 몇 가지 장점이 있습니다.
+첫째, 코드를 구성합니다. 처럼. Player 및 Player Color는 동일한 속성으로 정의되므로 각각 클래스를 공유합니다.
+스크립트에 클래스의 인스턴스가 있으면 해당 클래스의 속성이 축소 가능한 컨테이너가 있는 Inspector에 하위 속성으로 표시됩니다. 
+이것은 우리가 Inspector Window에서 명확하게 구성된 방식으로 속성을 그룹화할 수 있고 Inspector에서 드롭다운 보기를 축소하여 볼 필요가 없는 경우 정의한 후 대부분의 속성을 숨길 수 있음을 의미합니다.
+
+이것은 모든 요소가 열려 있는 이 Inspector 창입니다.
+
+그림 설명
+
+... 그리고 이것은 모든 요소가 닫힌 동일한 인스펙터 창입니다.
+
+그림 설명
+
+다음으로 얻을 수 있는 큰 이점은 스크립트에서 이러한 속성을 조작하려고 할 때 코드를 제어할 수 있다는 것입니다.
+Player를 속성이 있는 클래스로 정의했으므로 개별 속성 자체를 전달하는 대신 전체 Player를 단일 단위로 전달할 수 있습니다. 
+이 패널의 색상을 설정하는 데 필요한 코드를 설정하기 시작하면 이를 보다 명확하게 볼 수 있습니다.
+- 편집을 위해 GameController 스크립트를 엽니다.  
+패널의 색상을 설정하기 위해 측면을 변경할 때 플레이어 패널의 색상을 변경하는 새로운 일반 함수를 생성합니다.
+- "newPlayer" 및 "oldPlayer"라는 두 개의 플레이어 매개변수가 있는 "SetPlayerColors"라는 void를 반환하는 새 함수를 만듭니다.
+```cs
+void SetPlayerColors (Player newPlayer, Player oldPlayer)
+{
+
+}
+```
+
+- SetPlayerColors 함수에서,
+  - ... newPlayer의 색상을 활성 색상으로 설정합니다.
+  - ... oldPlayer의 색상을 비활성 색상으로 설정합니다.
+  
+```cs
+newPlayer.panel.color = activePlayerColor.panelColor; 
+newPlayer.text.color = activePlayerColor.textColor; 
+oldPlayer.panel.color = inactivePlayerColor.panelColor; 
+oldPlayer.text.color = inactivePlayerColor.textColor;
+```
+
+여기에서 전체 Player 정의를 SetPlayerColor에 인수로 보낸 다음 함수에 전달된 Player를 기반으로 하위 속성에 값을 할당한다는 점에 주목할 가치가 있습니다. 
+자체 클래스에서 Player 및 PlayerColor를 정의하지 않았다면 코드가 더 복잡했을 것입니다. 
+최소한 함수의 서명은 SetPlayerColors(Image newPlayerImage, Text newPlayerText, Image oldPlayerImage, Text oldPlayerText)와 같은 별도의 매개변수로 각 속성을 요구했을 것입니다.
+우리의 현재 스타일은 훨씬 더 효율적이고 훨씬 더 읽기 쉽고 이해하기 쉽습니다.
+
+이것은 플레이어 패널의 색상을 설정하는 일반 기능 코드입니다. 
+단순히 플레이어에게 보내는 순서대로 색상을 할당합니다.
+면을 변경할 때마다 호출해야 합니다. 
+그렇게 하려면 누가 차례인지에 따라 newPlayer와 oldPlayer를 SetPlayerColor로 보내는 ChangeSides 함수에 코드를 추가해야 합니다.
+여기서 playerSide가 X이면 playerX와 playerO를 순서대로 보냅니다. 
+그렇지 않으면 playerO와 playerX를 보냅니다. 
+이는 ChangeSides에서 playerSide가 "X"이고 playerX가 newPlayer이고 "O"가 oldPlayer이고 그 반대의 경우도 마찬가지이기 때문입니다.
+
+- ChangeSides 기능에서,
+  - ... 논리가 playerSide가 "X"인지 확인하는 if/else 문을 추가합니다.
+```cs
+if (playerSide == "X") 
+{
+
+}
+else
+{
+
+}
+```
+- ChangeSides 기능에서,
+  - .. if가 true이면 새로운 플레이어로 playerX를 사용하여 SetPlayerColors를 호출합니다.
+```cs
+SetPlayerColors(playerX, playerO);
+```
+- ChangeSides 기능에서,
+  - .. if가 false이면 else 블록에서 새로운 플레이어로 playerO를 사용하여 SetPlayerColors를 호출합니다.
+```cs
+SetPlayerColors(playerO, playerX);
+```
+이제 시작 면의 색 구성표를 activePlayerColor로 설정해야 합니다. 
+이 시점에서 "X"는 기본적으로 시작 쪽이므로 "X"에 대한 플레이어 패널을 newPlayer로 간단히 설정할 수 있습니다.
+- Awake에서
+  - ... 새로운 플레이어로 playerX를 사용하여 SetPlayerColors에 대한 호출을 추가합니다.
+```cs
+SetPlayerColors(playerX, playerO);
+```
+- 마지막으로 게임을 다시 시작할 때 activePlayerColor를 갖도록 "X"를 설정하려고 합니다.
+- RestartGame에서
+  - ... 새로운 플레이어로 playerX를 사용하여 SetPlayerColors에 대한 호출을 추가합니다.
+```cs
+SetPlayerColors(playerX, playerO);
+```
+
+최종 스크립트는 다음과 같아야 합니다.
+
+```cs
+using UnityEngine;
+using UnityEngine.UI;
+using System.Collections;
+
+[System.Serializable]
+public class Player {
+   public Image panel;
+   public Text text;
+}
+
+[System.Serializable]
+public class PlayerColor {
+   public Color panelColor;
+   public Color textColor;
+}
+
+public class GameController : MonoBehaviour {
+
+   public Text[] buttonList;
+   public GameObject gameOverPanel;
+   public Text gameOverText;
+   public GameObject restartButton;
+   public Player playerX;
+   public Player playerO;
+   public PlayerColor activePlayerColor;
+   public PlayerColor inactivePlayerColor;
+
+   private string playerSide;
+   private int moveCount;
+
+   void Awake ()
+   {
+       SetGameControllerReferenceOnButtons();
+       playerSide = "X";
+       gameOverPanel.SetActive(false);
+       moveCount = 0;
+       restartButton.SetActive(false);
+       SetPlayerColors(playerX, playerO);
+   }
+
+   void SetGameControllerReferenceOnButtons ()
+   {
+       for (int i = 0; i < buttonList.Length; i++)
+       {
+           buttonList[i].GetComponentInParent<GridSpace>().SetGameControllerReference(this);
+       }
+   }
+
+   public string GetPlayerSide ()
+   {
+       return playerSide;
+   }
+
+   public void EndTurn ()
+   {
+       moveCount++;
+
+       if (buttonList [0].text == playerSide && buttonList [1].text == playerSide && buttonList [2].text == playerSide)
+       {
+           GameOver(playerSide);
+       }
+
+       if (buttonList [3].text == playerSide && buttonList [4].text == playerSide && buttonList [5].text == playerSide)
+       {
+           GameOver(playerSide);
+       }
+
+       if (buttonList [6].text == playerSide && buttonList [7].text == playerSide && buttonList [8].text == playerSide)
+       {
+           GameOver(playerSide);
+       }
+
+       if (buttonList [0].text == playerSide && buttonList [3].text == playerSide && buttonList [6].text == playerSide)
+       {
+           GameOver(playerSide);
+       }
+
+       if (buttonList [1].text == playerSide && buttonList [4].text == playerSide && buttonList [7].text == playerSide)
+       {
+           GameOver(playerSide);
+       }
+
+       if (buttonList [2].text == playerSide && buttonList [5].text == playerSide && buttonList [8].text == playerSide)
+       {
+           GameOver(playerSide);
+       }
+
+       if (buttonList [0].text == playerSide && buttonList [4].text == playerSide && buttonList [8].text == playerSide)
+       {
+           GameOver(playerSide);
+       }
+
+       if (buttonList [2].text == playerSide && buttonList [4].text == playerSide && buttonList [6].text == playerSide)
+       {
+           GameOver(playerSide);
+       }
+
+       if (moveCount >= 9)
+       {
+           GameOver("draw");
+       }
+
+       ChangeSides();
+
+   }
+
+   void ChangeSides ()
+   {
+       playerSide = (playerSide == "X") ? "O" : "X";
+       if (playerSide == "X")
+       {
+           SetPlayerColors(playerX, playerO);
+       } 
+       else
+       {
+           SetPlayerColors(playerO, playerX);
+       }
+   }
+
+   void SetPlayerColors (Player newPlayer, Player oldPlayer)
+   {
+       newPlayer.panel.color = activePlayerColor.panelColor;
+       newPlayer.text.color = activePlayerColor.textColor;
+       oldPlayer.panel.color = inactivePlayerColor.panelColor;
+       oldPlayer.text.color = inactivePlayerColor.textColor;
+   }
+
+   void GameOver (string winningPlayer)
+   {
+       SetBoardInteractable(false);
+       if (winningPlayer == "draw")
+       {
+           SetGameOverText("It's a Draw!");
+       } else
+       {
+           SetGameOverText(winningPlayer + " Wins!");
+       }
+       restartButton.SetActive(true);
+   }
+
+   void SetGameOverText (string value)
+   {
+       gameOverPanel.SetActive(true);
+       gameOverText.text = value;
+   }
+
+   public void RestartGame ()
+   {
+       playerSide = "X";
+       moveCount = 0;
+       gameOverPanel.SetActive(false);
+       restartButton.SetActive(false);
+       SetPlayerColors(playerX, playerO);
+       SetBoardInteractable(true);
+
+       for (int i = 0; i < buttonList.Length; i++)
+       {
+           buttonList [i].text = "";
+       }
+   }
+
+   void SetBoardInteractable (bool toggle)
+   {
+       for (int i = 0; i < buttonList.Length; i++)
+       {
+           buttonList[i].GetComponentInParent<Button>().interactable = toggle;
+       }
+   }
+}
+```
+- 스크립트 저장
+- 유니티로 돌아가기
+- 플레이
+- 테스트
+
+재생 모드에 들어가면 "X"가 현재 플레이어임을 나타내는 밝은 색 구성표와 함께 "X" 패널이 강조 표시되어야 합니다.
+공간을 클릭하면 공간이 "X"에 할당되어야 하고 "O" 패널은 이제 밝은 색 구성표를 가져야 합니다.
+게임이 완료되면(승리 또는 무승부) 다시 시작 버튼이 나타납니다.
+
+그러나 약간의 결함이 있습니다. 감히 버그라고 할까요?
+
+한 플레이어가 이기면 다른 쪽의 패널이 강조 표시됩니다.
+
+그림 설명
+
+"X"가 이기더라도 "O" 패널이 강조 표시됩니다. 
+이것은 작은 문제이지만 앞에서 논의한 것처럼 우리는 이 프로젝트의 마무리 단계에 있으며 가능한 한 모든 것이 완벽해야 합니다.
+
+왜 이런 일이 발생합니까?
+
+코드를 살펴보겠습니다.
+
+- 편집을 위해 GameController 스크립트를 엽니다.
+
+EndTurn 함수를 보면 함수가 호출될 때마다 모든 코드가 실행되고 있음을 알 수 있습니다.
+여기서 일어나는 일은 moveCount를 증가시킨 후 함수가 모든 if 문을 확인하고 함수의 끝에서 함수가 ChangeSides를 호출한다는 것입니다.
+게임이 끝나지 않은 경우에만 ChangeSides를 호출하고 턴을 종료할 때마다 호출하는 것은 아닙니다.
+
+이 문제에 대한 가장 간단한 솔루션 중 하나는 이러한 개별 if 문을 단일 시리즈의 if/else if로 변경하는 것입니다. 
+이렇게 하면 이전 라인 중 하나가 true로 테스트되는 경우 모든 코드 라인을 확인할 필요가 없습니다. 
+이것은 또한 코드의 마지막 줄을 간단한 else로 남겨둘 수 있음을 의미하므로 승도 무승부가 없는 경우에만 ChangeSides를 호출합니다.
+
+- EndTurn에서
+  - 변경되지 않은 경우 첫 번째를 그대로 둡니다.
+  - moveCount에 대한 테스트를 포함하여 나머지 if를 모두 else if로 변경합니다
+  - ChangeSides 앞에 else를 추가하십시오.
+
+이 논리를 사용하여 가능한 모든 승리 조건을 확인합니다. 
+승리 조건 중 하나가 true로 테스트되면 게임 오버를 호출하고 if/else 논리를 가져옵니다. 
+무승부를 포함하여 승리 조건 중 어느 것도 사실이 아닌 것으로 판명되면 우리는 편을 바꿉니다.
+
+최종 스크립트는 다음과 같아야 합니다.
+
+```cs
+using UnityEngine;
+using UnityEngine.UI;
+using System.Collections;
+
+[System.Serializable]
+public class Player {
+   public Image panel;
+   public Text text;
+}
+
+[System.Serializable]
+public class PlayerColor {
+   public Color panelColor;
+   public Color textColor;
+}
+
+public class GameController : MonoBehaviour {
+
+   public Text[] buttonList;
+   public GameObject gameOverPanel;
+   public Text gameOverText;
+   public GameObject restartButton;
+   public Player playerX;
+   public Player playerO;
+   public PlayerColor activePlayerColor;
+   public PlayerColor inactivePlayerColor;
+
+   private string playerSide;
+   private int moveCount;
+
+   void Awake ()
+   {
+       SetGameControllerReferenceOnButtons();
+       playerSide = "X";
+       gameOverPanel.SetActive(false);
+       moveCount = 0;
+       restartButton.SetActive(false);
+       SetPlayerColors(playerX, playerO);
+   }
+
+   void SetGameControllerReferenceOnButtons ()
+   {
+       for (int i = 0; i < buttonList.Length; i++)
+       {
+           buttonList[i].GetComponentInParent<GridSpace>().SetGameControllerReference(this);
+       }
+   }
+
+   public string GetPlayerSide ()
+   {
+       return playerSide;
+   }
+
+   public void EndTurn ()
+   {
+       moveCount++;
+
+       if (buttonList [0].text == playerSide && buttonList [1].text == playerSide && buttonList [2].text == playerSide)
+       {
+           GameOver(playerSide);
+       } 
+       else if (buttonList [3].text == playerSide && buttonList [4].text == playerSide && buttonList [5].text == playerSide)
+       {
+           GameOver(playerSide);
+       } 
+       else if (buttonList [6].text == playerSide && buttonList [7].text == playerSide && buttonList [8].text == playerSide)
+       {
+           GameOver(playerSide);
+       } 
+       else if (buttonList [0].text == playerSide && buttonList [3].text == playerSide && buttonList [6].text == playerSide)
+       {
+           GameOver(playerSide);
+       } 
+       else if (buttonList [1].text == playerSide && buttonList [4].text == playerSide && buttonList [7].text == playerSide)
+       {
+           GameOver(playerSide);
+       } 
+       else if (buttonList [2].text == playerSide && buttonList [5].text == playerSide && buttonList [8].text == playerSide)
+       {
+           GameOver(playerSide);
+       } 
+       else if (buttonList [0].text == playerSide && buttonList [4].text == playerSide && buttonList [8].text == playerSide)
+       {
+           GameOver(playerSide);
+       } 
+       else if (buttonList [2].text == playerSide && buttonList [4].text == playerSide && buttonList [6].text == playerSide)
+       {
+           GameOver(playerSide);
+       } 
+       else if (moveCount >= 9)
+       {
+           GameOver("draw");
+       } 
+       else
+       {
+           ChangeSides();
+       }
+   }
+
+   void ChangeSides ()
+   {
+       playerSide = (playerSide == "X") ? "O" : "X";
+       if (playerSide == "X")
+       {
+           SetPlayerColors(playerX, playerO);
+       } 
+       else
+       {
+           SetPlayerColors(playerO, playerX);
+       }
+   }
+
+   void SetPlayerColors (Player newPlayer, Player oldPlayer)
+   {
+       newPlayer.panel.color = activePlayerColor.panelColor;
+       newPlayer.text.color = activePlayerColor.textColor;
+       oldPlayer.panel.color = inactivePlayerColor.panelColor;
+       oldPlayer.text.color = inactivePlayerColor.textColor;
+   }
+
+   void GameOver (string winningPlayer)
+   {
+       SetBoardInteractable(false);
+       if (winningPlayer == "draw")
+       {
+           SetGameOverText("It's a Draw!");
+       } else
+       {
+           SetGameOverText(winningPlayer + " Wins!");
+       }
+       restartButton.SetActive(true);
+   }
+
+   void SetGameOverText (string value)
+   {
+       gameOverPanel.SetActive(true);
+       gameOverText.text = value;
+   }
+
+   public void RestartGame ()
+   {
+       playerSide = "X";
+       moveCount = 0;
+       gameOverPanel.SetActive(false);
+       restartButton.SetActive(false);
+       SetPlayerColors(playerX, playerO);
+       SetBoardInteractable(true);
+
+       for (int i = 0; i < buttonList.Length; i++)
+       {
+           buttonList [i].text = "";
+       }
+   }
+
+   void SetBoardInteractable (bool toggle)
+   {
+       for (int i = 0; i < buttonList.Length; i++)
+       {
+           buttonList[i].GetComponentInParent<Button>().interactable = toggle;
+       }
+   }
+}
+```
+
+- 스크립트 저장
+- 유니티로 돌아아기
+- 플레이
+- 테스트
+
+이제 재생 모드에 들어가면 "X"가 현재 플레이어임을 나타내는 밝은 색 구성표와 함께 "X" 패널이 강조 표시되어야 합니다. 
+공간을 클릭하면 공간이 "X"에 할당되어야 하고 "O" 패널은 이제 밝은 색 구성표를 가져야 합니다. 
+게임이 완료되면(승리 또는 무승부) 다시 시작 버튼이 나타납니다. 
+그러나 이제 한 플레이어가 이기면 해당 팀의 패널이 강조 표시된 상태로 유지됩니다.
+
+그림 설명
+
+다음 수업에서는 "X" 또는 "O"를 시작면으로 선택하는 방법을 살펴보겠습니다.
+
 ## Getting Started
 
 Download links:
