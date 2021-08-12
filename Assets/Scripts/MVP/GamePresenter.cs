@@ -1,3 +1,5 @@
+using MVP;
+using UniRx;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -18,7 +20,6 @@ public class PlayerColorModel
 
 public class GamePresenter : MonoBehaviour
 {
-    public Text[] buttonList;
     public GameObject gameOverPanel;
     public Text gameOverText;
     public GameObject restartButton;
@@ -29,17 +30,56 @@ public class GamePresenter : MonoBehaviour
     public PlayerColorModel inactivePlayerColor;
 
     public GameObject startInfo;
-    
-    private string playerSide;
-    private int moveCount;
+
+    // 프리젠트 참조
+    public GridPresenter[] gridPresenters;
+
+    // 모델 정의
+    private GameModel gameModel = new GameModel();
 
     private void Awake()
     {
-        moveCount = 0;
+        gameModel.MoveCount = 0;
 
         SetGameControllerReferenceOnButtons();
         gameOverPanel.SetActive(false);
         restartButton.SetActive(false);
+    }
+
+    private void Start()
+    {
+        // 이벤트 바인딩
+        playerX.button.OnClickAsObservable().Subscribe(_ =>
+        {
+            SetStartingSide("X");
+        });
+
+        playerO.button.OnClickAsObservable().Subscribe(_ =>
+        {
+            SetStartingSide("O");
+        });
+
+        restartButton.GetComponent<Button>().OnClickAsObservable().Subscribe(_ =>
+        {
+            RestartGame();
+        });
+        
+        // 플레이어 턴이 변경될 시 호출.
+        gameModel.PlayerSide.Where(playerSide => !string.IsNullOrEmpty(playerSide))
+            .Subscribe(playerSide =>
+            {
+                if (playerSide == "X")
+                {
+                    SetPlayerColors(playerX, playerO);
+                }
+                else
+                {
+                    SetPlayerColors(playerO, playerX);
+                }
+            });
+
+        // 게임 오버 시 호출
+        gameModel.GameOver.Where(winPlayer => !string.IsNullOrEmpty(winPlayer)).Subscribe(GameOver);
     }
 
     private void StartGame()
@@ -51,84 +91,35 @@ public class GamePresenter : MonoBehaviour
 
     private void SetGameControllerReferenceOnButtons()
     {
-        for (int i = 0; i < buttonList.Length; i++)
+        foreach (var grid in gridPresenters)
         {
-            buttonList[i].GetComponentInParent<GridPresenter>().SetGameControllerReference(this);
+            grid.SetGameControllerReference(this);
         }
     }
 
     public string GetPlayerSide()
     {
-        return playerSide;
+        return gameModel.PlayerSide.Value;
     }
 
     public void EndTurn()
     {
-        moveCount++;
+        gameModel.MoveCount++;
 
-        if (buttonList[0].text == playerSide && buttonList[1].text == playerSide && buttonList[2].text == playerSide)
-        {
-            GameOver(playerSide);
-        }
-        else if (buttonList[3].text == playerSide && buttonList[4].text == playerSide &&
-                 buttonList[5].text == playerSide)
-        {
-            GameOver(playerSide);
-        }
-        else if (buttonList[6].text == playerSide && buttonList[7].text == playerSide &&
-                 buttonList[8].text == playerSide)
-        {
-            GameOver(playerSide);
-        }
-        else if (buttonList[0].text == playerSide && buttonList[3].text == playerSide &&
-                 buttonList[6].text == playerSide)
-        {
-            GameOver(playerSide);
-        }
-        else if (buttonList[1].text == playerSide && buttonList[4].text == playerSide &&
-                 buttonList[7].text == playerSide)
-        {
-            GameOver(playerSide);
-        }
-        else if (buttonList[2].text == playerSide && buttonList[5].text == playerSide &&
-                 buttonList[8].text == playerSide)
-        {
-            GameOver(playerSide);
-        }
-        else if (buttonList[0].text == playerSide && buttonList[4].text == playerSide &&
-                 buttonList[8].text == playerSide)
-        {
-            GameOver(playerSide);
-        }
-        else if (buttonList[2].text == playerSide && buttonList[4].text == playerSide &&
-                 buttonList[6].text == playerSide)
-        {
-            GameOver(playerSide);
-        }
-        else if (moveCount >= 9)
-        {
-            GameOver("draw");
-        }
-        else
-        {
-            ChangeSides();
-        }
+        gameModel.EndTurn(GetPlayerSides());
     }
 
-    private void ChangeSides()
+    private string[] GetPlayerSides()
     {
-        playerSide = (playerSide == "X") ? "O" : "X"; // Note: Capital Letters for "X" and "O"
+        var playerSides = new string[gridPresenters.Length];
+        for (int i = 0; i < gridPresenters.Length; i++)
+        {
+            playerSides[i] = gridPresenters[i].GetPlayerSide();
+        }
 
-        if (playerSide == "X")
-        {
-            SetPlayerColors(playerX, playerO);
-        }
-        else
-        {
-            SetPlayerColors(playerO, playerX);
-        }
+        return playerSides;
     }
-
+    
     private void SetGameOverText(string value)
     {
         gameOverPanel.SetActive(true);
@@ -137,24 +128,24 @@ public class GamePresenter : MonoBehaviour
 
     public void RestartGame()
     {
-        moveCount = 0;
+        gameModel.MoveCount = 0;
         gameOverPanel.SetActive(false);
         restartButton.SetActive(false);
         SetPlayerButtons(true);
         SetPlayerColorsInactive();
         startInfo.SetActive(true);
-        
-        for (int i = 0; i < buttonList.Length; i++)
+
+        foreach (var grid in gridPresenters)
         {
-            buttonList[i].text = "";
+            grid.ResetPlayerSide();
         }
     }
 
     private void SetBoardInteractable(bool toggle)
     {
-        for (int i = 0; i < buttonList.Length; i++)
+        foreach (var grid in gridPresenters)
         {
-            buttonList[i].GetComponentInParent<Button>().interactable = toggle;
+            grid.SetBoardInteractable(toggle);
         }
     }
 
@@ -185,16 +176,7 @@ public class GamePresenter : MonoBehaviour
 
     public void SetStartingSide(string startingSide)
     {
-        playerSide = startingSide;
-        if (playerSide == "X")
-        {
-            SetPlayerColors(playerX, playerO);
-        }
-        else
-        {
-            SetPlayerColors(playerO, playerX);
-        }
-
+        gameModel.PlayerSide.Value = startingSide;
         StartGame();
     }
 
