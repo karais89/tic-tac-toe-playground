@@ -20,6 +20,8 @@ namespace MVP
 
     public class GameView : MonoBehaviour
     {
+        public GridView[] gridView;
+
         public GameObject gameOverPanel;
         public Text gameOverText;
         public GameObject restartButton;
@@ -30,7 +32,7 @@ namespace MVP
         public PlayerColorView inactivePlayerColor;
 
         public GameObject startInfo;
-
+        
         public void SetPlayerColors(string playerSide)
         {
             if (playerSide == "X")
@@ -48,9 +50,10 @@ namespace MVP
             gameOverPanel.SetActive(false);
             restartButton.SetActive(false);
         }
-
+        
         public void StartGame()
         {
+            SetBoardInteractable(true);
             SetPlayerButtons(false);
             startInfo.SetActive(false);
         }
@@ -66,6 +69,8 @@ namespace MVP
 
         public void GameOver(string winningPlayer)
         {
+            SetBoardInteractable(false);
+            
             if (winningPlayer == "draw")
             {
                 SetGameOverText("It's a Draw!");
@@ -77,6 +82,14 @@ namespace MVP
             }
 
             restartButton.SetActive(true);
+        }
+
+        private void SetBoardInteractable(bool toggle)
+        {
+            foreach (var grid in gridView)
+            {
+                grid.SetBoardInteractable(toggle);
+            }
         }
 
         private void SetGameOverText(string value)

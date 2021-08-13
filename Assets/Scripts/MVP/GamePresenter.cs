@@ -9,23 +9,35 @@ namespace MVP
         // 뷰 정의
         public GameView view;
 
-        // 다른 프리젠트 참조
-        public GridPresenter[] gridPresenters;
-
         // 모델 정의
         private GameModel gameModel = new GameModel();
+        private GridModel[] gridModels;
 
         private void Awake()
         {
             gameModel.InitData();
-
-            SetGamePresenterReferenceOnButtons();
+            MakeGridModel();
+            
             view.Init();
+        }
+        
+        private void MakeGridModel()
+        {
+            gridModels = new GridModel[view.gridView.Length];
+            for (int i = 0; i < view.gridView.Length; i++)
+            {
+                gridModels[i] = new GridModel();
+            }
         }
 
         private void Start()
         {
-            // 이벤트 바인딩
+            SetEvents();
+            Bind();
+        }
+
+        private void SetEvents()
+        {
             view.playerX.button.OnClickAsObservable()
                 .Subscribe(_ => { SetStartingSide("X"); })
                 .AddTo(gameObject);
@@ -38,6 +50,18 @@ namespace MVP
                 .Subscribe(_ => { RestartGame(); })
                 .AddTo(gameObject);
 
+            // 그리드 안의 버튼들 이벤트 등록
+            for (int i = 0; i < view.gridView.Length; i++)
+            {
+                int index = i; // 클로저
+                view.gridView[i].button.OnClickAsObservable()
+                    .Subscribe(_ => { SetSpace(index); })
+                    .AddTo(gameObject);
+            }
+        }
+
+        private void Bind()
+        {
             // 플레이어 턴이 변경될 시 호출.
             gameModel.PlayerSide
                 .Where(playerSide => !string.IsNullOrEmpty(playerSide))
@@ -49,39 +73,29 @@ namespace MVP
                 .Where(winPlayer => !string.IsNullOrEmpty(winPlayer))
                 .Subscribe(GameOver)
                 .AddTo(gameObject);
-        }
 
-        private void StartGame()
-        {
-            SetBoardInteractable(true);
-            
-            view.StartGame();
-        }
-
-        private void SetGamePresenterReferenceOnButtons()
-        {
-            foreach (var grid in gridPresenters)
+            // 그리드안의 값 변경시 호출
+            for (int i = 0; i < gridModels.Length; i++)
             {
-                grid.SetGamePresenterReference(this);
+                gridModels[i].PlayerSide
+                    .SubscribeToText(view.gridView[i].buttonText)
+                    .AddTo(gameObject);
             }
         }
 
-        public string GetPlayerSide()
+        private void SetSpace(int index)
         {
-            return gameModel.PlayerSide.Value;
-        }
-
-        public void EndTurn()
-        {
+            gridModels[index].PlayerSide.Value = gameModel.PlayerSide.Value;
+            view.gridView[index].SetBoardInteractable(false);
             gameModel.EndTurn(GetPlayerSides());
         }
 
         private string[] GetPlayerSides()
         {
-            var playerSides = new string[gridPresenters.Length];
-            for (int i = 0; i < gridPresenters.Length; i++)
+            var playerSides = new string[gridModels.Length];
+            for (int i = 0; i < gridModels.Length; i++)
             {
-                playerSides[i] = gridPresenters[i].GetPlayerSide();
+                playerSides[i] = gridModels[i].PlayerSide.Value;
             }
 
             return playerSides;
@@ -90,30 +104,21 @@ namespace MVP
         private void RestartGame()
         {
             gameModel.InitData();
+            InitGridModel();
+            
             view.RestartGame();
-            ResetBoardPlayerSide();
         }
 
-        private void ResetBoardPlayerSide()
+        private void InitGridModel()
         {
-            foreach (var grid in gridPresenters)
+            foreach (var model in gridModels)
             {
-                grid.ResetPlayerSide();
-            }
-        }
-
-        private void SetBoardInteractable(bool toggle)
-        {
-            foreach (var grid in gridPresenters)
-            {
-                grid.SetBoardInteractable(toggle);
+                model.PlayerSide.Value = "";
             }
         }
 
         private void GameOver(string winningPlayer)
         {
-            SetBoardInteractable(false);
-
             view.GameOver(winningPlayer);
         }
 
@@ -121,7 +126,7 @@ namespace MVP
         {
             gameModel.PlayerSide.Value = startingSide;
 
-            StartGame();
+            view.StartGame();
         }
     }
 }

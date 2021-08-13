@@ -154,16 +154,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   view: {fileID: 5724528}
-  gridPresenters:
-  - {fileID: 90872741}
-  - {fileID: 456341536}
-  - {fileID: 1595733933}
-  - {fileID: 516478863}
-  - {fileID: 210414862}
-  - {fileID: 143349950}
-  - {fileID: 1859459339}
-  - {fileID: 1868821578}
-  - {fileID: 2021837918}
 --- !u!4 &5724527
 Transform:
   m_ObjectHideFlags: 0
@@ -208,6 +198,16 @@ MonoBehaviour:
     panelColor: {r: 0.12941177, g: 0.17254902, b: 0.21568628, a: 1}
     textColor: {r: 0, g: 0.8, b: 0.8, a: 1}
   startInfo: {fileID: 2054711032}
+  gridView:
+  - {fileID: 90872741}
+  - {fileID: 456341536}
+  - {fileID: 1595733933}
+  - {fileID: 516478863}
+  - {fileID: 210414862}
+  - {fileID: 143349950}
+  - {fileID: 1859459339}
+  - {fileID: 1868821578}
+  - {fileID: 2021837918}
 --- !u!114 &90872741 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: -2010406440298005573, guid: c58f519f144c5814ab960568f6957788, type: 3}
