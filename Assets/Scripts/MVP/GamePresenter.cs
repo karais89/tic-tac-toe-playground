@@ -12,7 +12,7 @@ public class PlayerView
 }
 
 [System.Serializable]
-public class PlayerColorModel
+public class PlayerColorView
 {
     public Color panelColor;
     public Color textColor;
@@ -26,8 +26,8 @@ public class GamePresenter : MonoBehaviour
 
     public PlayerView playerX;
     public PlayerView playerO;
-    public PlayerColorModel activePlayerColor;
-    public PlayerColorModel inactivePlayerColor;
+    public PlayerColorView activePlayerColor;
+    public PlayerColorView inactivePlayerColor;
 
     public GameObject startInfo;
 
@@ -52,17 +52,17 @@ public class GamePresenter : MonoBehaviour
         playerX.button.OnClickAsObservable().Subscribe(_ =>
         {
             SetStartingSide("X");
-        });
+        }).AddTo(gameObject);
 
         playerO.button.OnClickAsObservable().Subscribe(_ =>
         {
             SetStartingSide("O");
-        });
+        }).AddTo(gameObject);
 
         restartButton.GetComponent<Button>().OnClickAsObservable().Subscribe(_ =>
         {
             RestartGame();
-        });
+        }).AddTo(gameObject);
         
         // 플레이어 턴이 변경될 시 호출.
         gameModel.PlayerSide.Where(playerSide => !string.IsNullOrEmpty(playerSide))
@@ -76,10 +76,12 @@ public class GamePresenter : MonoBehaviour
                 {
                     SetPlayerColors(playerO, playerX);
                 }
-            });
+            }).AddTo(gameObject);
 
         // 게임 오버 시 호출
-        gameModel.GameOver.Where(winPlayer => !string.IsNullOrEmpty(winPlayer)).Subscribe(GameOver);
+        gameModel.GameOver.Where(winPlayer => !string.IsNullOrEmpty(winPlayer))
+            .Subscribe(GameOver)
+            .AddTo(gameObject);
     }
 
     private void StartGame()

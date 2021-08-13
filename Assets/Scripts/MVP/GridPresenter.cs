@@ -21,7 +21,7 @@ public class GridPresenter : MonoBehaviour
         button.OnClickAsObservable().Subscribe(_ =>
         {
             SetSpace();
-        });
+        }).AddTo(gameObject);
     }
 
     private void SetSpace()
