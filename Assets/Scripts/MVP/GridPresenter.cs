@@ -1,50 +1,49 @@
-using MVP;
 using UniRx;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class GridPresenter : MonoBehaviour
+namespace MVP
 {
-    public Button button;
-    public Text buttonText;
-
-    private GamePresenter gamePresenter;
-    private GridModel gridModel = new GridModel();
-
-    public void SetGameControllerReference(GamePresenter presenter)
+    public class GridPresenter : MonoBehaviour
     {
-        gamePresenter = presenter;
-    }
+        public Button button;
+        public Text buttonText;
 
-    private void Start()
-    {
-        button.OnClickAsObservable().Subscribe(_ =>
+        private GamePresenter gamePresenter;
+        private GridModel gridModel = new GridModel();
+
+        public void SetGameControllerReference(GamePresenter presenter)
         {
-            SetSpace();
-        }).AddTo(gameObject);
-    }
+            gamePresenter = presenter;
+        }
 
-    private void SetSpace()
-    {
-        gridModel.PlayerSide = gamePresenter.GetPlayerSide();
-        
-        buttonText.text = gridModel.PlayerSide;
-        button.interactable = false;
-        gamePresenter.EndTurn();
-    }
+        private void Start()
+        {
+            button.OnClickAsObservable().Subscribe(_ => { SetSpace(); }).AddTo(gameObject);
+        }
 
-    public string GetPlayerSide()
-    {
-        return gridModel.PlayerSide;
-    }
+        private void SetSpace()
+        {
+            gridModel.PlayerSide = gamePresenter.GetPlayerSide();
 
-    public void ResetPlayerSide()
-    {
-        gridModel.PlayerSide = "";
-    }
+            buttonText.text = gridModel.PlayerSide;
+            button.interactable = false;
+            gamePresenter.EndTurn();
+        }
 
-    public void SetBoardInteractable(bool toggle)
-    {
-        button.interactable = toggle;
+        public string GetPlayerSide()
+        {
+            return gridModel.PlayerSide;
+        }
+
+        public void ResetPlayerSide()
+        {
+            gridModel.PlayerSide = "";
+        }
+
+        public void SetBoardInteractable(bool toggle)
+        {
+            button.interactable = toggle;
+        }
     }
 }
