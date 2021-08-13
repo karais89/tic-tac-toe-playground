@@ -40,7 +40,7 @@ namespace MVP
 
         private void Awake()
         {
-            gameModel.MoveCount = 0;
+            gameModel.InitData();
 
             SetGameControllerReferenceOnButtons();
             gameOverPanel.SetActive(false);
@@ -50,15 +50,21 @@ namespace MVP
         private void Start()
         {
             // 이벤트 바인딩
-            playerX.button.OnClickAsObservable().Subscribe(_ => { SetStartingSide("X"); }).AddTo(gameObject);
+            playerX.button.OnClickAsObservable()
+                .Subscribe(_ => { SetStartingSide("X"); })
+                .AddTo(gameObject);
 
-            playerO.button.OnClickAsObservable().Subscribe(_ => { SetStartingSide("O"); }).AddTo(gameObject);
+            playerO.button.OnClickAsObservable()
+                .Subscribe(_ => { SetStartingSide("O"); })
+                .AddTo(gameObject);
 
-            restartButton.GetComponent<Button>().OnClickAsObservable().Subscribe(_ => { RestartGame(); })
+            restartButton.GetComponent<Button>().OnClickAsObservable()
+                .Subscribe(_ => { RestartGame(); })
                 .AddTo(gameObject);
 
             // 플레이어 턴이 변경될 시 호출.
-            gameModel.PlayerSide.Where(playerSide => !string.IsNullOrEmpty(playerSide))
+            gameModel.PlayerSide
+                .Where(playerSide => !string.IsNullOrEmpty(playerSide))
                 .Subscribe(playerSide =>
                 {
                     if (playerSide == "X")
@@ -72,7 +78,8 @@ namespace MVP
                 }).AddTo(gameObject);
 
             // 게임 오버 시 호출
-            gameModel.GameOver.Where(winPlayer => !string.IsNullOrEmpty(winPlayer))
+            gameModel.GameOver
+                .Where(winPlayer => !string.IsNullOrEmpty(winPlayer))
                 .Subscribe(GameOver)
                 .AddTo(gameObject);
         }
@@ -99,8 +106,6 @@ namespace MVP
 
         public void EndTurn()
         {
-            gameModel.MoveCount++;
-
             gameModel.EndTurn(GetPlayerSides());
         }
 
@@ -121,9 +126,10 @@ namespace MVP
             gameOverText.text = value;
         }
 
-        public void RestartGame()
+        private void RestartGame()
         {
-            gameModel.MoveCount = 0;
+            gameModel.InitData();
+
             gameOverPanel.SetActive(false);
             restartButton.SetActive(false);
             SetPlayerButtons(true);
@@ -169,9 +175,10 @@ namespace MVP
             oldPlayer.text.color = inactivePlayerColor.textColor;
         }
 
-        public void SetStartingSide(string startingSide)
+        private void SetStartingSide(string startingSide)
         {
             gameModel.PlayerSide.Value = startingSide;
+
             StartGame();
         }
 

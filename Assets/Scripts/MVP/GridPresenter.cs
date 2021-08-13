@@ -19,26 +19,31 @@ namespace MVP
 
         private void Start()
         {
-            button.OnClickAsObservable().Subscribe(_ => { SetSpace(); }).AddTo(gameObject);
+            button.OnClickAsObservable()
+                .Subscribe(_ => { SetSpace(); })
+                .AddTo(gameObject);
+            
+            gridModel.PlayerSide
+                .SubscribeToText(buttonText)
+                .AddTo(gameObject);
         }
 
         private void SetSpace()
         {
-            gridModel.PlayerSide = gamePresenter.GetPlayerSide();
-
-            buttonText.text = gridModel.PlayerSide;
+            gridModel.PlayerSide.Value = gamePresenter.GetPlayerSide();
+            
             button.interactable = false;
             gamePresenter.EndTurn();
         }
 
         public string GetPlayerSide()
         {
-            return gridModel.PlayerSide;
+            return gridModel.PlayerSide.Value;
         }
 
         public void ResetPlayerSide()
         {
-            gridModel.PlayerSide = "";
+            gridModel.PlayerSide.Value = "";
         }
 
         public void SetBoardInteractable(bool toggle)

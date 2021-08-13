@@ -1,4 +1,5 @@
 ﻿using UniRx;
+using UnityEngine;
 
 namespace MVP
 {
@@ -16,50 +17,59 @@ namespace MVP
             GameOver = new ReactiveProperty<string>();
         }
 
+        public void InitData()
+        {
+            MoveCount = 0;
+            PlayerSide.Value = string.Empty;
+            GameOver.Value = string.Empty;
+        }
+
         private void ChangeSides()
         {
             PlayerSide.Value =
                 (PlayerSide.Value == "X") ? "O" : "X"; // Note: Capital Letters for "X" and "O"
         }
 
-        public void EndTurn(string[] gridPlayerSides)
+        public void EndTurn(string[] playerSides)
         {
-            if (gridPlayerSides[0] == PlayerSide.Value && gridPlayerSides[1] == PlayerSide.Value && gridPlayerSides[2] == PlayerSide.Value)
+            MoveCount++;
+            
+            if (playerSides[0] == PlayerSide.Value && playerSides[1] == PlayerSide.Value && playerSides[2] == PlayerSide.Value)
             {
                 GameOver.Value = PlayerSide.Value;
             }
-            else if (gridPlayerSides[3] == PlayerSide.Value && gridPlayerSides[4] == PlayerSide.Value &&
-                     gridPlayerSides[5] == PlayerSide.Value)
+            else if (playerSides[3] == PlayerSide.Value && playerSides[4] == PlayerSide.Value &&
+                     playerSides[5] == PlayerSide.Value)
             {
                 GameOver.Value = PlayerSide.Value;
             }
-            else if (gridPlayerSides[6] == PlayerSide.Value && gridPlayerSides[7] == PlayerSide.Value &&
-                     gridPlayerSides[8] == PlayerSide.Value)
+            else if (playerSides[6] == PlayerSide.Value && playerSides[7] == PlayerSide.Value &&
+                     playerSides[8] == PlayerSide.Value)
             {
                 GameOver.Value = PlayerSide.Value;
             }
-            else if (gridPlayerSides[0] == PlayerSide.Value && gridPlayerSides[3] == PlayerSide.Value &&
-                     gridPlayerSides[6] == PlayerSide.Value)
+            else if (playerSides[0] == PlayerSide.Value && playerSides[3] == PlayerSide.Value &&
+                     playerSides[6] == PlayerSide.Value)
             {
                 GameOver.Value = PlayerSide.Value;
             }
-            else if (gridPlayerSides[1] == PlayerSide.Value && gridPlayerSides[4] == PlayerSide.Value &&
-                     gridPlayerSides[7] == PlayerSide.Value)
+            else if (playerSides[1] == PlayerSide.Value && playerSides[4] == PlayerSide.Value &&
+                     playerSides[7] == PlayerSide.Value)
             {
                 GameOver.Value = PlayerSide.Value;
             }
-            else if (gridPlayerSides[2] == PlayerSide.Value && gridPlayerSides[5] == PlayerSide.Value &&
-                     gridPlayerSides[8] == PlayerSide.Value)
+            else if (playerSides[2] == PlayerSide.Value && playerSides[5] == PlayerSide.Value &&
+                     playerSides[8] == PlayerSide.Value)
             {
                 GameOver.Value = PlayerSide.Value;
             }
-            else if (gridPlayerSides[0] == PlayerSide.Value && gridPlayerSides[4] == PlayerSide.Value &&
-                     gridPlayerSides[8] == PlayerSide.Value)
+            else if (playerSides[0] == PlayerSide.Value && playerSides[4] == PlayerSide.Value &&
+                     playerSides[8] == PlayerSide.Value)
             {
                 GameOver.Value = PlayerSide.Value;
             }
-            else if (gridPlayerSides[2] == PlayerSide.Value && gridPlayerSides[4] == PlayerSide.Value &&
-                     gridPlayerSides[6] == PlayerSide.Value)
+            else if (playerSides[2] == PlayerSide.Value && playerSides[4] == PlayerSide.Value &&
+                     playerSides[6] == PlayerSide.Value)
             {
                 GameOver.Value = PlayerSide.Value;
             }
