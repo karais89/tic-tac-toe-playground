@@ -4,35 +4,12 @@ using UnityEngine.UI;
 
 namespace MVP
 {
-    [System.Serializable]
-    public class PlayerView
-    {
-        public Image panel;
-        public Text text;
-        public Button button;
-    }
-
-    [System.Serializable]
-    public class PlayerColorView
-    {
-        public Color panelColor;
-        public Color textColor;
-    }
-
     public class GamePresenter : MonoBehaviour
     {
-        public GameObject gameOverPanel;
-        public Text gameOverText;
-        public GameObject restartButton;
+        // 뷰 정의
+        public GameView view;
 
-        public PlayerView playerX;
-        public PlayerView playerO;
-        public PlayerColorView activePlayerColor;
-        public PlayerColorView inactivePlayerColor;
-
-        public GameObject startInfo;
-
-        // 프리젠트 참조
+        // 다른 프리젠트 참조
         public GridPresenter[] gridPresenters;
 
         // 모델 정의
@@ -42,40 +19,30 @@ namespace MVP
         {
             gameModel.InitData();
 
-            SetGameControllerReferenceOnButtons();
-            gameOverPanel.SetActive(false);
-            restartButton.SetActive(false);
+            SetGamePresenterReferenceOnButtons();
+            view.Init();
         }
 
         private void Start()
         {
             // 이벤트 바인딩
-            playerX.button.OnClickAsObservable()
+            view.playerX.button.OnClickAsObservable()
                 .Subscribe(_ => { SetStartingSide("X"); })
                 .AddTo(gameObject);
 
-            playerO.button.OnClickAsObservable()
+            view.playerO.button.OnClickAsObservable()
                 .Subscribe(_ => { SetStartingSide("O"); })
                 .AddTo(gameObject);
 
-            restartButton.GetComponent<Button>().OnClickAsObservable()
+            view.restartButton.GetComponent<Button>().OnClickAsObservable()
                 .Subscribe(_ => { RestartGame(); })
                 .AddTo(gameObject);
 
             // 플레이어 턴이 변경될 시 호출.
             gameModel.PlayerSide
                 .Where(playerSide => !string.IsNullOrEmpty(playerSide))
-                .Subscribe(playerSide =>
-                {
-                    if (playerSide == "X")
-                    {
-                        SetPlayerColors(playerX, playerO);
-                    }
-                    else
-                    {
-                        SetPlayerColors(playerO, playerX);
-                    }
-                }).AddTo(gameObject);
+                .Subscribe(view.SetPlayerColors)
+                .AddTo(gameObject);
 
             // 게임 오버 시 호출
             gameModel.GameOver
@@ -87,15 +54,15 @@ namespace MVP
         private void StartGame()
         {
             SetBoardInteractable(true);
-            SetPlayerButtons(false);
-            startInfo.SetActive(false);
+            
+            view.StartGame();
         }
 
-        private void SetGameControllerReferenceOnButtons()
+        private void SetGamePresenterReferenceOnButtons()
         {
             foreach (var grid in gridPresenters)
             {
-                grid.SetGameControllerReference(this);
+                grid.SetGamePresenterReference(this);
             }
         }
 
@@ -120,22 +87,15 @@ namespace MVP
             return playerSides;
         }
 
-        private void SetGameOverText(string value)
-        {
-            gameOverPanel.SetActive(true);
-            gameOverText.text = value;
-        }
-
         private void RestartGame()
         {
             gameModel.InitData();
+            view.RestartGame();
+            ResetBoardPlayerSide();
+        }
 
-            gameOverPanel.SetActive(false);
-            restartButton.SetActive(false);
-            SetPlayerButtons(true);
-            SetPlayerColorsInactive();
-            startInfo.SetActive(true);
-
+        private void ResetBoardPlayerSide()
+        {
             foreach (var grid in gridPresenters)
             {
                 grid.ResetPlayerSide();
@@ -154,25 +114,7 @@ namespace MVP
         {
             SetBoardInteractable(false);
 
-            if (winningPlayer == "draw")
-            {
-                SetGameOverText("It's a Draw!");
-                SetPlayerColorsInactive();
-            }
-            else
-            {
-                SetGameOverText(winningPlayer + " Wins!");
-            }
-
-            restartButton.SetActive(true);
-        }
-
-        private void SetPlayerColors(PlayerView newPlayer, PlayerView oldPlayer)
-        {
-            newPlayer.panel.color = activePlayerColor.panelColor;
-            newPlayer.text.color = activePlayerColor.textColor;
-            oldPlayer.panel.color = inactivePlayerColor.panelColor;
-            oldPlayer.text.color = inactivePlayerColor.textColor;
+            view.GameOver(winningPlayer);
         }
 
         private void SetStartingSide(string startingSide)
@@ -180,20 +122,6 @@ namespace MVP
             gameModel.PlayerSide.Value = startingSide;
 
             StartGame();
-        }
-
-        private void SetPlayerButtons(bool toggle)
-        {
-            playerX.button.interactable = toggle;
-            playerO.button.interactable = toggle;
-        }
-
-        private void SetPlayerColorsInactive()
-        {
-            playerX.panel.color = inactivePlayerColor.panelColor;
-            playerX.text.color = inactivePlayerColor.textColor;
-            playerO.panel.color = inactivePlayerColor.panelColor;
-            playerO.text.color = inactivePlayerColor.textColor;
         }
     }
 }

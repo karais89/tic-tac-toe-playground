@@ -12,7 +12,7 @@ namespace MVP
         private GamePresenter gamePresenter;
         private GridModel gridModel = new GridModel();
 
-        public void SetGameControllerReference(GamePresenter presenter)
+        public void SetGamePresenterReference(GamePresenter presenter)
         {
             gamePresenter = presenter;
         }
@@ -31,7 +31,6 @@ namespace MVP
         private void SetSpace()
         {
             gridModel.PlayerSide.Value = gamePresenter.GetPlayerSide();
-            
             button.interactable = false;
             gamePresenter.EndTurn();
         }

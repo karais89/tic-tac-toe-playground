@@ -1,15 +1,16 @@
 ﻿using UniRx;
-using UnityEngine;
 
 namespace MVP
 {
     // 게임 모델. 게임의 전체적인 비즈니스 로직 담당
     public class GameModel
     {
-        public ReactiveProperty<string> PlayerSide { get; }
-        public ReactiveProperty<string> GameOver { get; }
+        // ReactiveProperty는 값이 변경될 시 발행 된다.
         
-        public int MoveCount { get; set; }
+        public ReactiveProperty<string> PlayerSide { get; } // 현재 턴 정보 (O or X)
+        public ReactiveProperty<string> GameOver { get; } // 게임 오버 정보 (턴 정보 or draw)
+
+        private int moveCount;
         
         public GameModel()
         {
@@ -19,7 +20,7 @@ namespace MVP
 
         public void InitData()
         {
-            MoveCount = 0;
+            moveCount = 0;
             PlayerSide.Value = string.Empty;
             GameOver.Value = string.Empty;
         }
@@ -30,9 +31,10 @@ namespace MVP
                 (PlayerSide.Value == "X") ? "O" : "X"; // Note: Capital Letters for "X" and "O"
         }
 
+        // 그리드 정보 비교. 비효율적인 방법이지만, 기존 유니티 예제와 동일한 방법으로 구현
         public void EndTurn(string[] playerSides)
         {
-            MoveCount++;
+            moveCount++;
             
             if (playerSides[0] == PlayerSide.Value && playerSides[1] == PlayerSide.Value && playerSides[2] == PlayerSide.Value)
             {
@@ -73,7 +75,7 @@ namespace MVP
             {
                 GameOver.Value = PlayerSide.Value;
             }
-            else if (MoveCount >= 9)
+            else if (moveCount >= 9)
             {
                 GameOver.Value = "draw";
             }
