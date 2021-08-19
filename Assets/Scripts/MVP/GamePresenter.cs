@@ -80,13 +80,18 @@ namespace MVP
                 gridModels[i].PlayerSide
                     .SubscribeToText(view.gridView[i].buttonText)
                     .AddTo(gameObject);
+                
+                int index = i; // 클로저
+                gridModels[i].PlayerSide
+                    .Where(val => !string.IsNullOrEmpty(val))
+                    .Subscribe(_ => { view.gridView[index].SetBoardInteractable(false); })
+                    .AddTo(gameObject);
             }
         }
 
         private void SetSpace(int index)
         {
             gridModels[index].PlayerSide.Value = gameModel.PlayerSide.Value;
-            view.gridView[index].SetBoardInteractable(false);
             gameModel.EndTurn(GetPlayerSides());
         }
 
